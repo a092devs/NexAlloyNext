@@ -164,6 +164,7 @@ fun HomeContent(
                         packageName = packageName,
                         appIconColor = bundles.firstNotNullOfOrNull { it.appIconColors[packageName] },
                         recommendedVersion = bundles.firstNotNullOfOrNull { it.recommendedVersion(packageName) },
+                        targets = bundles.flatMap { it.targets[packageName].orEmpty() },
                         inScope = packageName !in state.missingScope,
                         onClick = { onOpenApp(packageName) },
                     )

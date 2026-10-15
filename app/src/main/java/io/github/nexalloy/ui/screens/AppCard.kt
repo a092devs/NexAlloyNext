@@ -81,6 +81,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import io.github.nexalloy.AppTarget
 import io.github.nexalloy.core.R
 import android.graphics.Matrix as AndroidMatrix
 import android.graphics.Path as AndroidPath
@@ -174,6 +175,7 @@ fun AppCard(
     packageName: String,
     appIconColor: Int?,
     recommendedVersion: String?,
+    targets: List<AppTarget> = emptyList(),
     inScope: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -194,12 +196,14 @@ fun AppCard(
     val untestedLabel = stringResource(R.string.chip_untested)
     val updateLabel = stringResource(R.string.badge_update)
     val versionCompare = recommendedVersion?.let { compareVersions(installed, it) }
+    val isKnownTarget = targets.any { compareVersions(installed, it.version) == 0 }
+    val isUntested = !isKnownTarget && (versionCompare != null && versionCompare > 0)
     val version = "v$installed"
     val description = buildString {
         append("$appName, $version")
         if (!inScope) append(", $notInScopeLabel")
         if (versionCompare != null && versionCompare < 0) append(", $updateLabel v$recommendedVersion")
-        if (versionCompare != null && versionCompare > 0) append(", $untestedLabel")
+        if (isUntested) append(", $untestedLabel")
     }
 
     AppCardLayout(
@@ -231,13 +235,12 @@ fun AppCard(
                     StatusBadge(notInScopeLabel, Icons.Outlined.AutoFixHigh, style.chipContainerColor, style.chipContentColor)
                 }
                 when {
-                    versionCompare == null -> Unit
-                    versionCompare < 0 -> StatusBadge(
+                    versionCompare != null && versionCompare < 0 -> StatusBadge(
                         recommendedVersion.takeIf { it.length <= MAX_BADGE_VERSION_LENGTH }?.let { "v$it" } ?: updateLabel,
                         Icons.Outlined.ArrowUpward, style.chipContainerColor, style.chipContentColor,
                     )
 
-                    versionCompare > 0 -> StatusBadge(
+                    isUntested -> StatusBadge(
                         untestedLabel, Icons.AutoMirrored.Outlined.HelpOutline,
                         style.chipContainerColor, style.chipContentColor,
                     )
