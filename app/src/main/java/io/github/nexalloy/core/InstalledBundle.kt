@@ -2,6 +2,7 @@ package io.github.nexalloy.core
 
 import android.content.SharedPreferences
 import io.github.nexalloy.AppTarget
+import io.github.nexalloy.core.compatibility.CompatibilityEngine
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -35,7 +36,7 @@ data class InstalledBundle(
 ) {
     /** The version this bundle recommends for an app, or null for any version. */
     fun recommendedVersion(packageName: String): String? =
-        targets[packageName]?.let { targets -> (targets.firstOrNull { !it.experimental } ?: targets.firstOrNull())?.version }
+        CompatibilityEngine.recommendedVersion(targets[packageName].orEmpty())
 
     fun toJson(): JSONObject = JSONObject()
         .put("id", id)
@@ -49,7 +50,7 @@ data class InstalledBundle(
         .put("sourceId", sourceId)
         .put("apps", JSONObject(apps))
         .put("resourcePackageId", resourcePackageId)
-        .put("appIconColors", JSONObject(appIconColors.mapValues { it.value }))
+        .put("appIconColors", JSONObject(appIconColors))
         .put("targets", JSONObject().apply {
             targets.forEach { (packageName, versions) ->
                 put(packageName, JSONArray().apply {
@@ -59,31 +60,49 @@ data class InstalledBundle(
         })
 
     companion object {
-        fun fromJson(json: JSONObject) = InstalledBundle(
-            id = json.getString("id"),
-            name = json.getString("name"),
-            version = json.getString("version"),
-            versionCode = json.optLong("versionCode"),
-            author = json.optString("author"),
-            description = json.optString("description"),
-            fileName = json.getString("fileName"),
-            enabled = json.optBoolean("enabled", true),
-            sourceId = json.optString("sourceId").takeIf { it.isNotEmpty() && it != "null" },
-            apps = json.getJSONObject("apps").let { apps ->
-                apps.keys().asSequence().associateWith { apps.getString(it) }
-            },
-            resourcePackageId = json.optInt("resourcePackageId"),
-            appIconColors = json.optJSONObject("appIconColors")?.let { colors ->
-                colors.keys().asSequence().associateWith { colors.getInt(it) }
-            }.orEmpty(),
-            targets = json.optJSONObject("targets")?.let { targets ->
+        fun fromJson(json: JSONObject): InstalledBundle {
+            val appsMap = json.optJSONObject("apps")?.let { apps ->
+                apps.keys().asSequence().associateWith { apps.optString(it, "") }
+            }.orEmpty()
+
+            val colorsMap = json.optJSONObject("appIconColors")?.let { colors ->
+                colors.keys().asSequence().mapNotNull { key ->
+                    colors.optInt(key).takeIf { it != 0 }?.let { key to it }
+                }.toMap()
+            }.orEmpty()
+
+            val targetsMap = json.optJSONObject("targets")?.let { targets ->
                 targets.keys().asSequence().associateWith { packageName ->
-                    val array = targets.getJSONArray(packageName)
-                    (0 until array.length()).map { array.getJSONObject(it) }
-                        .map { AppTarget(it.getString("version"), it.optBoolean("experimental")) }
+                    val array = targets.optJSONArray(packageName) ?: return@associateWith emptyList()
+                    (0 until array.length()).mapNotNull { i ->
+                        val obj = array.optJSONObject(i)
+                        if (obj != null) {
+                            val v = obj.optString("version", "")
+                            if (v.isNotEmpty()) AppTarget(v, obj.optBoolean("experimental", false)) else null
+                        } else {
+                            val str = array.optString(i, "")
+                            if (str.isNotEmpty()) AppTarget(str, false) else null
+                        }
+                    }
                 }
-            }.orEmpty(),
-        )
+            }.orEmpty()
+
+            return InstalledBundle(
+                id = json.optString("id", ""),
+                name = json.optString("name", "Unknown Bundle"),
+                version = json.optString("version", "1.0.0"),
+                versionCode = json.optLong("versionCode", 0L),
+                author = json.optString("author", ""),
+                description = json.optString("description", ""),
+                fileName = json.optString("fileName", ""),
+                enabled = json.optBoolean("enabled", true),
+                sourceId = json.optString("sourceId").takeIf { it.isNotEmpty() && it != "null" },
+                apps = appsMap,
+                resourcePackageId = json.optInt("resourcePackageId", 0),
+                appIconColors = colorsMap,
+                targets = targetsMap,
+            )
+        }
     }
 }
 
@@ -97,7 +116,9 @@ object BundleRegistry {
         val raw = prefs.getString(KEY, null) ?: return emptyList()
         return runCatching {
             val array = JSONArray(raw)
-            (0 until array.length()).map { InstalledBundle.fromJson(array.getJSONObject(it)) }
+            (0 until array.length()).mapNotNull { i ->
+                runCatching { InstalledBundle.fromJson(array.getJSONObject(i)) }.getOrNull()
+            }
         }.getOrDefault(emptyList())
     }
 

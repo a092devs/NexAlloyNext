@@ -104,6 +104,7 @@ class PatchExecutor(
     /** The bundle the executed patches come from. */
     val bundle: BundleInfo,
     private val dexkit: DexKitCacheBridge.RecyclableBridge,
+    private val sessionAppliedPatches: MutableSet<String>? = null,
 ) : IHook(xposed) {
     override val classLoader = lpparam.classLoader
 
@@ -116,11 +117,23 @@ class PatchExecutor(
         patches.forEach { hook ->
             if (appliedPatches.contains(hook)) return@forEach
             if (!patchPreferences.getBoolean(patchPreferenceKey(bundle.id, hook.name), hook.use)) return@forEach
+
+            // Multi-source conflict prevention: skip duplicates already applied in this session
+            if (hook.name.isNotEmpty() && !hook.name.startsWith("<")) {
+                if (sessionAppliedPatches != null && sessionAppliedPatches.contains(hook.name)) {
+                    PatcherLog.info { "Duplicate patch '${hook.name}' from bundle '${bundle.name}' skipped (already applied by prior bundle)" }
+                    return@forEach
+                }
+            }
+
             runCatching { hook.run(this) }.onFailure { err ->
                 XposedBridge.log(err)
                 failedPatches.add(hook)
             }.onSuccess {
                 appliedPatches.add(hook)
+                if (hook.name.isNotEmpty() && !hook.name.startsWith("<")) {
+                    sessionAppliedPatches?.add(hook.name)
+                }
             }
         }
     }

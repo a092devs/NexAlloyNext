@@ -74,6 +74,7 @@ class PatchSession(
     private val cache = SharedPrefCache(app)
     private val failedPatches = mutableListOf<String>()
     private val appVersion by lazy { readAppVersion() }
+    private val sessionAppliedPatches = mutableSetOf<String>()
 
     init {
         System.loadLibrary("dexkit")
@@ -85,7 +86,8 @@ class PatchSession(
             loadCacheIfValid(bundle)
             val executor = PatchExecutor(
                 app, lpparam, xposed, bundle,
-                DexKitCacheBridge.create(bundle.id, lpparam.applicationInfo.sourceDir)
+                DexKitCacheBridge.create(bundle.id, lpparam.applicationInfo.sourceDir),
+                sessionAppliedPatches = sessionAppliedPatches
             )
             try {
                 executor.executePatches(patches)
@@ -100,7 +102,8 @@ class PatchSession(
     /** Records a bundle that could not be loaded at all. */
     fun reportBundleFailure(bundleName: String, error: Throwable) {
         XposedBridge.log(error)
-        failedPatches.add("all patches ($bundleName)")
+        val msg = error.message?.takeIf { it.isNotBlank() } ?: error.javaClass.simpleName
+        failedPatches.add("all patches ($bundleName: $msg)")
     }
 
     fun finish() {
@@ -109,8 +112,7 @@ class PatchSession(
             XposedBridge.log("${lpparam.packageName} version: $appVersion")
             showToast("Error while applying the following patches:\n${failedPatches.joinToString()}")
         } else if (debug) {
-            XposedBridge.log("${lpparam.packageName} version: $appVersion")
-            showToast("Patches applied successfully")
+            XposedBridge.log("${lpparam.packageName} version: $appVersion: patches applied successfully")
         }
     }
 
@@ -140,7 +142,21 @@ class PatchSession(
         return "${packageInfo.versionName} ($versionCode)"
     }
 
+    private fun isMainProcess(): Boolean {
+        val currentProcess = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Application.getProcessName()
+        } else {
+            runCatching {
+                val am = app.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+                val pid = android.os.Process.myPid()
+                am?.runningAppProcesses?.firstOrNull { it.pid == pid }?.processName
+            }.getOrNull() ?: app.packageName
+        }
+        return currentProcess == app.packageName
+    }
+
     private fun showToast(message: String) {
+        if (!isMainProcess()) return
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(app, message, Toast.LENGTH_LONG).show()
         }

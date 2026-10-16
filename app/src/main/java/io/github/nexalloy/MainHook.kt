@@ -83,7 +83,8 @@ class MainHook : XposedModule() {
         }
 
         val apk = File(dir, bundle.fileName)
-        if (!apk.exists()) {
+        if (!apk.exists() || apk.length() == 0L) {
+            if (apk.exists()) apk.delete()
             val tmp = File(dir, "${bundle.fileName}.tmp")
             openRemoteFile(bundle.fileName).use { pfd ->
                 FileInputStream(pfd.fileDescriptor).use { input ->

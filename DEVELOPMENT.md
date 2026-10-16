@@ -3,7 +3,7 @@
 ## Architecture
 
 NexAlloy is split into a module and patch bundles, like Morphe Manager and Morphe patch sources. This repository
-holds the module; the bundles NexAlloy presets live in [NexAlloyNext-Patches](https://github.com/2eno/NexAlloyNext-Patches).
+holds the module; the bundles NexAlloy presets live in [NexAlloyNext-Patches](https://github.com/a092devs/NexAlloyNext-Patches).
 
 ```text
 📦 NexAlloyNext
@@ -55,8 +55,8 @@ Patch toggles are stored in the per-app remote preferences under `<bundle id>/<p
 
 ## Writing a patch bundle
 
-Copy the [template](template) into a new repository. [NexAlloyNext-Patches](https://github.com/2eno/NexAlloyNext-Patches)
-is a larger example with two bundles, shared extension code and fingerprint tests.
+Copy the [template](template) into a new repository. [NexAlloyNext-Patches](https://github.com/a092devs/NexAlloyNext-Patches)
+is a larger example with several bundles, shared extension code and fingerprint tests.
 
 ### Bundle module
 
@@ -89,7 +89,7 @@ dependencies {
 `./gradlew :bundle:assembleBundle` writes `build/outputs/bundle/<module>-<version>.nxb`. Publish it as a release
 asset, and users can add the repository as a patch source.
 
-The patcher API is published to the Maven repository `https://raw.githubusercontent.com/2eno/NexAlloyNext/maven`
+The patcher API is published to the Maven repository `https://raw.githubusercontent.com/a092devs/NexAlloyNext/maven`
 by the release workflow. Add it and `https://api.xposed.info` to your repositories.
 
 Rules for bundles:

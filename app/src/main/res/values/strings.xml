@@ -64,6 +64,7 @@
     <!-- App patches -->
     <string name="force_stop_to_apply_summary">Force stop the app to apply changes.</string>
     <string name="patches_load_failed">Could not load the patches: %s</string>
+    <string name="duplicate_patch_warning">Provided by multiple bundles</string>
     <string name="action_app_info">App info</string>
     <string name="action_restore_defaults">Restore defaults</string>
     <string name="action_disable_all">Disable all</string>
@@ -76,6 +77,7 @@
     <string name="setting_notify_patches_summary">Notify when an installed patch source releases new bundles</string>
     <string name="check_for_update_title">Check for updates</string>
     <string name="settings_general">General</string>
+    <string name="settings_appearance">Appearance</string>
     <string name="hide_icon_title">Hide launcher icon</string>
     <string name="hide_icon_summary">Open NexAlloyNext from LSPosed instead</string>
     <string name="settings_about">About</string>
@@ -88,4 +90,62 @@
     <string name="notification_app_update_title">NexAlloyNext %s is available</string>
     <string name="notification_app_update_text">Tap to update the app.</string>
     <string name="notification_patch_update_title">Patch updates available</string>
+
+    <!-- Compatibility Statuses & Redesign -->
+    <string name="status_compatible">Compatible</string>
+    <string name="status_compatible_experimental">Compatible (Exp)</string>
+    <string name="status_untested">Untested (v%s)</string>
+    <string name="status_dynamic">Dynamic</string>
+    <string name="status_incompatible">Incompatible</string>
+    <string name="status_missing_bundle">Missing Bundle</string>
+    <string name="status_not_installed">Not Installed</string>
+    <string name="category_installed_apps">Installed Applications</string>
+    <string name="category_supported_uninstalled">Supported Apps (Not Installed)</string>
+    <string name="search_apps_hint">Search applications or packages…</string>
+    <string name="filter_all">All</string>
+    <string name="filter_updates">Updates</string>
+    <string name="filter_scope">Scope Issues</string>
+    <string name="tab_sources">Sources</string>
+    <string name="tab_bundles">Bundles</string>
+    <string name="theme_title">Colour mode</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_style_title">Design system</string>
+    <string name="theme_style_material3">Material 3</string>
+    <string name="theme_style_miuix">Miuix</string>
+    <string name="color_scheme_title">Colour scheme</string>
+    <string name="color_scheme_default">Default</string>
+    <string name="color_scheme_violet">Violet</string>
+    <string name="color_scheme_emerald">Emerald</string>
+    <string name="color_scheme_amber">Amber</string>
+    <string name="color_scheme_rose">Rose</string>
+    <string name="color_scheme_ocean">Ocean</string>
+    <string name="miuix_floating_nav_title">Floating navigation bar</string>
+    <string name="miuix_floating_nav_summary">Detached bar over the content with the official Miuix blur backdrop. Off by default; patches and navigation are unaffected.</string>
+    <string name="cache_cleared">Cleared %d cached files</string>
+    <string name="action_clear_cache">Clear DexKit cache</string>
+    <string name="action_clear_cache_summary">Removes cached bytecode fingerprints and resets hook index</string>
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_summary">View system environment, LSPosed framework state, and bundles</string>
+    <string name="action_copy_diagnostics">Copy to clipboard</string>
+    <string name="diagnostics_copied">Diagnostics copied to clipboard</string>
+    <string name="patches_count">%d patches available</string>
+    <string name="search_patches_hint">Search patches…</string>
+    <string name="no_patches_found">No matching patches found</string>
+
+    <!-- Multi-source Management -->
+    <string name="source_refreshed">Refreshed %s</string>
+    <string name="source_refresh_failed">Refresh %1$s failed: %2$s</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="filter_conflicts">Conflicts</string>
+    <string name="filter_uninstalled">Not Installed</string>
+    <string name="provenance_official">Official</string>
+    <string name="provenance_community">Community</string>
+    <string name="provenance_nexalloy">NexAlloy</string>
+    <string name="provenance_custom">Custom</string>
+    <string name="preset_sources_title">Quick-add curated source:</string>
+    <string name="source_enabled">Enabled</string>
+    <string name="source_disabled">Disabled</string>
+    <string name="last_refreshed">Refreshed: %s</string>
 </resources>

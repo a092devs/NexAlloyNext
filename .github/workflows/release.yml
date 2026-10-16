@@ -1,100 +1,257 @@
 name: Android Release CI
 
 on:
-  push:
-    tags:
-      - '*.*.*'
-  # Releases the selected ref under a new tag, e.g. when tags cannot be pushed.
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag, X.Y.Z or X.Y.Z-suffix for a pre-release'
-        required: true
-      delete:
-        description: 'Also delete the releases and tags whose tag contains this text, e.g. -alpha'
-        required: false
+    push:
+        tags:
+            - '*.*.*'
+
+    workflow_dispatch:
+        inputs:
+            tag:
+                description: 'Release tag, X.Y.Z or X.Y.Z-suffix for a pre-release'
+                required: true
+                type: string
+            delete:
+                description: 'Delete releases and tags whose tag contains this text, e.g. -alpha'
+                required: false
+                type: string
+
+permissions:
+    contents: write
+
+concurrency:
+    group: release
+    cancel-in-progress: false
 
 env:
-  TAG: ${{ inputs.tag || github.ref_name }}
+    TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
-  build:
+    build:
+        runs-on: ubuntu-latest
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+        permissions:
+            contents: write
 
-    steps:
-    - uses: actions/checkout@v6
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
 
-    - name: set up JDK
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: gradle
+            - name: Set up JDK
+              uses: actions/setup-java@v5
+              with:
+                  java-version: '21'
+                  distribution: temurin
+                  cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+            - name: Grant execute permission for gradlew
+              run: chmod +x gradlew
 
-    - name: Write key
-      run: |
-        if [ -z "${{ secrets.KEYSTORE }}" ]; then
-          if [[ "${{ env.TAG }}" != *-* ]]; then
-            echo "::error::Signing secrets are missing. Add KEYSTORE (base64), KEYSTORE_PASSWORD, KEYSTORE_ALIAS and KEYSTORE_ALIAS_PASSWORD in Settings > Secrets and variables > Actions."
-            exit 1
-          fi
-          # Pre-releases may go out signed with a throwaway debug key.
-          echo "::warning::Signing secrets are missing, the pre-release APK is signed with a debug key."
-          echo "DEBUG_SIGNED=true" >> "$GITHUB_ENV"
-          exit 0
-        fi
-        echo KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} > signing.properties
-        echo KEYSTORE_ALIAS=${{ secrets.KEYSTORE_ALIAS }} >> signing.properties
-        echo KEYSTORE_ALIAS_PASSWORD='${{ secrets.KEYSTORE_ALIAS_PASSWORD }}' >> signing.properties
-        echo KEYSTORE_FILE=../key.jks >> signing.properties
-        echo ${{ secrets.KEYSTORE }} | base64 --decode > key.jks
+            - name: Prepare signing
+              shell: bash
+              env:
+                  KEYSTORE: ${{ secrets.KEYSTORE }}
+                  STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+                  KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+                  ALIAS_PASSWORD: ${{ secrets.KEYSTORE_ALIAS_PASSWORD }}
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
 
-    - name: Build module and patcher API
-      run: ./gradlew :app:assembleRelease :patcher:publishAllPublicationsToReleaseRepository
+                  echo "DEBUG_SIGNED=false" >> "$GITHUB_ENV"
 
-    - name: Create release
-      run: |
-        mkdir release
-        cp app/build/outputs/apk/release/app-release.apk release/NexAlloyNext-${{ env.TAG }}.apk
-        FLAGS=""
-        NOTES=""
-        # Tags like 3.1.10-beta are pre-releases.
-        if [[ "${{ env.TAG }}" == *-* ]]; then FLAGS="--prerelease"; fi
-        if [ "$DEBUG_SIGNED" = "true" ]; then
-          NOTES="> [!WARNING]
-        > This APK is signed with a throwaway debug key. Uninstall it before installing a later release."
-        fi
-        gh release create ${{ env.TAG }} release/* $FLAGS --target "${{ github.sha }}" --title "${{ env.TAG }}" --notes "$NOTES" --generate-notes
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  if [[ -z "$KEYSTORE" ]]; then
+                    if [[ "$RELEASE_TAG" != *-* ]]; then
+                      echo "::error::Stable releases require signing secrets."
+                      echo "::error::Configure KEYSTORE, KEYSTORE_PASSWORD, KEYSTORE_ALIAS and KEYSTORE_ALIAS_PASSWORD in repository Actions secrets."
+                      exit 1
+                    fi
 
-    # External patch bundles compile against the patcher API from this Maven repository:
-    # https://raw.githubusercontent.com/<owner>/<repo>/maven
-    - name: Publish patcher API to the maven branch
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git fetch origin maven || true
-        git worktree add maven-repo origin/maven 2>/dev/null || { git worktree add --detach maven-repo && git -C maven-repo checkout --orphan maven && git -C maven-repo rm -rfq .; }
-        cp -r build/maven/. maven-repo/
-        cd maven-repo
-        git add -A
-        git commit -m "Publish patcher API from ${{ env.TAG }}" || exit 0
-        git push origin HEAD:maven
+                    echo "::warning::Signing secrets are missing. This pre-release will use the debug key."
+                    echo "DEBUG_SIGNED=true" >> "$GITHUB_ENV"
+                    exit 0
+                  fi
 
-    - name: Delete superseded releases
-      if: inputs.delete != ''
-      run: |
-        gh release list --limit 200 --json tagName --jq '.[].tagName' > tags
-        for tag in $(grep -F -- "$PATTERN" tags | grep -vxF -- "$TAG" || true); do
-          gh release delete "$tag" --cleanup-tag --yes
-        done
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        PATTERN: ${{ inputs.delete }}
+                  if [[ -z "$STORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$ALIAS_PASSWORD" ]]; then
+                    echo "::error::One or more signing secrets are missing."
+                    exit 1
+                  fi
+
+                  printf '%s' "$KEYSTORE" | base64 --decode > key.jks
+
+                  {
+                    printf 'KEYSTORE_PASSWORD=%s\n' "$STORE_PASSWORD"
+                    printf 'KEYSTORE_ALIAS=%s\n' "$KEY_ALIAS"
+                    printf 'KEYSTORE_ALIAS_PASSWORD=%s\n' "$ALIAS_PASSWORD"
+                    printf 'KEYSTORE_FILE=../key.jks\n'
+                  } > signing.properties
+
+                  test -s key.jks
+
+                  keytool -list \
+                    -keystore key.jks \
+                    -storepass "$STORE_PASSWORD" \
+                    -alias "$KEY_ALIAS" >/dev/null
+
+                  echo "Keystore and alias verified."
+
+            - name: Build module and patcher API
+              shell: bash
+              run: |
+                  set -euo pipefail
+
+                  ./gradlew \
+                    :app:assembleRelease \
+                    :patcher:publishAllPublicationsToReleaseRepository \
+                    --no-configuration-cache
+
+            - name: Generate release notes
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+
+                  # Prefer the curated section for this tag from CHANGELOG.md and fall back to the
+                  # generated commit notes when the changelog has no section for the tag yet.
+                  section=""
+                  if [[ -f CHANGELOG.md ]]; then
+                    section="$(awk -v tag="$RELEASE_TAG" '
+                      /^## / {
+                        if (found) exit
+                        rest = substr($0, 4)
+                        sub(/[ \t].*$/, "", rest)
+                        if (rest == tag) found = 1
+                        next
+                      }
+                      found { print }
+                    ' CHANGELOG.md)"
+                  fi
+
+                  if [[ -n "${section//[[:space:]]/}" ]]; then
+                    printf '%s\n' "$section" > release-notes.md
+                  else
+                    gh api \
+                      "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+                      -f "tag_name=$RELEASE_TAG" \
+                      -f "target_commitish=$GITHUB_SHA" \
+                      --jq '.body' > release-notes.md
+                  fi
+
+                  if [[ "${DEBUG_SIGNED:-false}" == "true" ]]; then
+                    {
+                      printf '\n\n'
+                      printf '> [!WARNING]\n'
+                      printf '> This APK is signed with a debug key. Uninstall it before installing a later release signed with a different key.\n'
+                    } >> release-notes.md
+                  fi
+
+            - name: Create release
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+
+                  mkdir -p release
+
+                  APK="app/build/outputs/apk/release/app-release.apk"
+
+                  if [[ ! -f "$APK" ]]; then
+                    echo "::error::Release APK not found at $APK"
+                    exit 1
+                  fi
+
+                  cp "$APK" "release/NexAlloyNext-${RELEASE_TAG}.apk"
+
+                  if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+                    echo "::error::Release $RELEASE_TAG already exists. Choose a new tag."
+                    exit 1
+                  fi
+
+                  RELEASE_ARGS=(
+                    "$RELEASE_TAG"
+                    "release/NexAlloyNext-${RELEASE_TAG}.apk"
+                    --target "$GITHUB_SHA"
+                    --title "$RELEASE_TAG"
+                    --notes-file release-notes.md
+                  )
+
+                  if [[ "$RELEASE_TAG" == *-* ]]; then
+                    RELEASE_ARGS+=(--prerelease)
+                  fi
+
+                  gh release create "${RELEASE_ARGS[@]}"
+
+            # External patch bundles use:
+            # https://raw.githubusercontent.com/<owner>/<repo>/maven
+            - name: Publish patcher API to the maven branch
+              shell: bash
+              env:
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+
+                  if [[ ! -d build/maven ]]; then
+                    echo "::error::Maven artifacts were not found in build/maven."
+                    find . -type f -name 'maven-metadata.xml' -print
+                    exit 1
+                  fi
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+                  git fetch origin maven || true
+
+                  if git show-ref --verify --quiet refs/remotes/origin/maven; then
+                    git worktree add maven-repo origin/maven
+                  else
+                    git worktree add --detach maven-repo
+                    git -C maven-repo checkout --orphan maven
+                    git -C maven-repo rm -rfq . || true
+                  fi
+
+                  cp -r build/maven/. maven-repo/
+
+                  git -C maven-repo add -A
+
+                  if git -C maven-repo diff --cached --quiet; then
+                    echo "Maven repository has no changes."
+                    exit 0
+                  fi
+
+                  git -C maven-repo commit -m "Publish patcher API from $RELEASE_TAG"
+                  git -C maven-repo push origin HEAD:maven
+
+            - name: Delete superseded releases
+              if: ${{ inputs.delete != '' }}
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  PATTERN: ${{ inputs.delete }}
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+
+                  gh release list \
+                    --limit 200 \
+                    --json tagName \
+                    --jq '.[].tagName' > tags
+
+                  while IFS= read -r OLD_TAG; do
+                    [[ -z "$OLD_TAG" ]] && continue
+                    [[ "$OLD_TAG" == "$RELEASE_TAG" ]] && continue
+
+                    if [[ "$OLD_TAG" == *"$PATTERN"* ]]; then
+                      echo "Deleting superseded release: $OLD_TAG"
+                      gh release delete "$OLD_TAG" --cleanup-tag --yes
+                    fi
+                  done < tags
+
+            - name: Clean up signing files
+              if: always()
+              run: rm -f key.jks signing.properties release-notes.md tags

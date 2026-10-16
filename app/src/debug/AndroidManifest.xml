@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Debug builds only: headless bundle install over adb, see DebugBundleInstallReceiver. -->
+        <receiver
+            android:name="io.github.nexalloy.DebugBundleInstallReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="io.github.nexalloy.next.DEBUG_INSTALL_BUNDLE" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

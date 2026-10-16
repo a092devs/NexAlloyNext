@@ -14,7 +14,7 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: set up JDK
       uses: actions/setup-java@v5
@@ -22,6 +22,11 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: gradle
+
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v4
+      with:
+        packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -69,3 +74,45 @@ jobs:
           --notes "Nightly build from commit ${GIT_DESCRIBE}."
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  auto-release:
+    name: Auto release
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      actions: write
+
+    concurrency:
+      group: auto-release
+      cancel-in-progress: false
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Dispatch release workflow for the current version
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -euo pipefail
+
+        CODE=$(grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.kts | head -1)
+        NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts | head -1)
+        VERSION="${NAME//\$versionCode/$CODE}"
+        echo "Resolved release version: $VERSION"
+
+        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
+          echo "::error::Could not resolve a release version from app/build.gradle.kts (got '$VERSION')."
+          exit 1
+        fi
+
+        if gh release view "$VERSION" >/dev/null 2>&1; then
+          echo "Release $VERSION already exists; nothing to release."
+          exit 0
+        fi
+
+        gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f tag="$VERSION"
+        echo "Dispatched the release workflow for $VERSION."

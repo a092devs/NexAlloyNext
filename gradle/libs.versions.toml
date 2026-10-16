@@ -24,6 +24,11 @@ protobuf = "0.10.0"
 protoc = "4.35.1"
 collections4 = "4.6.0"
 lang3 = "3.20.0"
+miuix = "0.9.1"
+# Transitive dependency of miuix-ui; declared explicitly so palette generation can use it.
+materialKolor = "4.1.1"
+
+
 
 
 [libraries]
@@ -55,6 +60,12 @@ protobuf-protoc = { module = "com.google.protobuf:protoc", version.ref = "protoc
 androidx-javascriptengine = { module = "androidx.javascriptengine:javascriptengine", version.ref = "androidx-javascriptengine" }
 collections4 = { module = "org.apache.commons:commons-collections4", version.ref = "collections4" }
 lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "lang3" }
+miuix-ui = { group = "top.yukonga.miuix.kmp", name = "miuix-ui", version.ref = "miuix" }
+miuix-blur = { group = "top.yukonga.miuix.kmp", name = "miuix-blur", version.ref = "miuix" }
+miuix-icons = { group = "top.yukonga.miuix.kmp", name = "miuix-icons", version.ref = "miuix" }
+miuix-preference = { group = "top.yukonga.miuix.kmp", name = "miuix-preference", version.ref = "miuix" }
+material-kolor-utilities = { group = "com.materialkolor", name = "material-color-utilities", version.ref = "materialKolor" }
+
 
 [plugins]
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinCompose" }

@@ -201,14 +201,16 @@ fun Context.addModuleAssets() {
 fun injectSelfClassLoaderToHost(self: ClassLoader, host: ClassLoader, packagePrefix: String = "app.morphe") {
     val findClassMethod =
         XposedHelpers.findMethodExact(ClassLoader::class.java, "findClass", String::class.java)
-    host.setObjectField("parent", object : ClassLoader(host.parent) {
+    val knownPrefixes = listOf(packagePrefix, "app.twoeno", "crimera.piko", "io.github.nexalloy")
+    val currentParent = host.parent
+    host.setObjectField("parent", object : ClassLoader(currentParent) {
         override fun findClass(name: String): Class<*> {
             try {
-                if (name.startsWith(packagePrefix)) {
+                if (knownPrefixes.any { name.startsWith(it) }) {
                     return findClassMethod(self, name) as Class<*>
                 }
             } catch (_: ClassNotFoundException) {
-                PatcherLog.error { "Unexpected ClassNotFoundException: $name" }
+                // Ignore, will delegate to parent
             }
 
             throw ClassNotFoundException(name)

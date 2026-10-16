@@ -11,6 +11,7 @@ import io.github.nexalloy.core.InstalledBundle
 import io.github.nexalloy.core.InvalidBundleException
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.security.MessageDigest
@@ -20,12 +21,59 @@ import java.security.MessageDigest
  *
  * Bundle APKs are stored twice: as a remote file of the Xposed service, which hooked apps read,
  * and in the manager's own storage, from which the manager lists their patches.
+ *
+ * Offline resilience: reads from local preferences when the XposedService is inactive.
  */
-class BundleManager(private val context: Context, private val service: XposedService) {
-    private val registryPrefs get() = service.getRemotePreferences(BundleRegistry.PREFS_GROUP)
+class BundleManager(private val context: Context, private val service: XposedService? = null) {
+    private val localPrefs get() = context.getSharedPreferences(BundleRegistry.PREFS_GROUP, Context.MODE_PRIVATE)
+    private val registryPrefs get() = service?.takeIf {
+        runCatching { it.getRemotePreferences(BundleRegistry.PREFS_GROUP) }.isSuccess
+    }?.getRemotePreferences(BundleRegistry.PREFS_GROUP)
+
     private val localDir get() = File(context.filesDir, "bundles").apply { mkdirs() }
 
-    val installed: List<InstalledBundle> get() = BundleRegistry.read(registryPrefs)
+    val installed: List<InstalledBundle>
+        get() {
+            val remote = registryPrefs?.let { runCatching { BundleRegistry.read(it) }.getOrNull() }
+            if (!remote.isNullOrEmpty()) {
+                // Sync to local preferences for offline access
+                BundleRegistry.write(localPrefs, remote)
+                return remote
+            }
+            val local = BundleRegistry.read(localPrefs)
+            if (local.isNotEmpty()) {
+                // If local has bundles but remote was empty/unpopulated, sync to remote
+                registryPrefs?.let { runCatching { BundleRegistry.write(it, local) } }
+            }
+            return local
+        }
+
+    /**
+     * Synchronizes local bundles and their APK files to the XposedService remote storage.
+     * Ensures target hooked processes can access bundle APKs and registry metadata.
+     */
+    fun syncToService() {
+        val svc = service ?: return
+        val current = installed
+        if (current.isNotEmpty()) {
+            registryPrefs?.let { runCatching { BundleRegistry.write(it, current) } }
+            for (bundle in current) {
+                val localFile = File(localDir, bundle.fileName)
+                if (localFile.exists()) {
+                    runCatching {
+                        svc.openRemoteFile(bundle.fileName).use { pfd ->
+                            if (pfd.statSize == 0L || pfd.statSize != localFile.length()) {
+                                FileOutputStream(pfd.fileDescriptor).use { output ->
+                                    output.channel.truncate(0)
+                                    localFile.inputStream().use { it.copyTo(output) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     /** Installs or updates a bundle. Blocking; call off the main thread. */
     fun install(input: InputStream, sourceId: String?): InstalledBundle {
@@ -64,10 +112,12 @@ class BundleManager(private val context: Context, private val service: XposedSer
             // Fails here, before anything is published, if the bundle's code cannot be loaded.
             val apps = loadApps(local, manifest.entryClass)
 
-            service.openRemoteFile(fileName).use { pfd ->
-                FileOutputStream(pfd.fileDescriptor).use { output ->
-                    output.channel.truncate(0)
-                    local.inputStream().use { it.copyTo(output) }
+            service?.let { svc ->
+                svc.openRemoteFile(fileName).use { pfd ->
+                    FileOutputStream(pfd.fileDescriptor).use { output ->
+                        output.channel.truncate(0)
+                        local.inputStream().use { it.copyTo(output) }
+                    }
                 }
             }
 
@@ -87,7 +137,10 @@ class BundleManager(private val context: Context, private val service: XposedSer
                 targets = apps.filter { it.targets.isNotEmpty() }.associate { it.packageName to it.targets },
                 appIconColors = apps.mapNotNull { app -> app.appIconColor?.let { app.packageName to it } }.toMap(),
             )
-            BundleRegistry.write(registryPrefs, installed.filter { it.id != bundle.id } + bundle)
+            val updated = installed.filter { it.id != bundle.id } + bundle
+            registryPrefs?.let { BundleRegistry.write(it, updated) }
+            BundleRegistry.write(localPrefs, updated)
+
             if (previous != null && previous.fileName != fileName) deleteFiles(previous.fileName)
             return bundle
         } finally {
@@ -96,14 +149,18 @@ class BundleManager(private val context: Context, private val service: XposedSer
     }
 
     fun uninstall(bundle: InstalledBundle) {
-        BundleRegistry.write(registryPrefs, installed.filter { it.id != bundle.id })
+        val updated = installed.filter { it.id != bundle.id }
+        registryPrefs?.let { BundleRegistry.write(it, updated) }
+        BundleRegistry.write(localPrefs, updated)
         deleteFiles(bundle.fileName)
     }
 
     fun setEnabled(bundle: InstalledBundle, enabled: Boolean) {
-        BundleRegistry.write(registryPrefs, installed.map {
+        val updated = installed.map {
             if (it.id == bundle.id) it.copy(enabled = enabled) else it
-        })
+        }
+        registryPrefs?.let { BundleRegistry.write(it, updated) }
+        BundleRegistry.write(localPrefs, updated)
     }
 
     /**
@@ -112,7 +169,8 @@ class BundleManager(private val context: Context, private val service: XposedSer
      * Apps that are not installed are left out: the framework asks the user about every requested package.
      */
     fun missingScope(): List<String> {
-        val scope = runCatching { service.scope.toSet() }.getOrDefault(emptySet())
+        val svc = service ?: return emptyList()
+        val scope = runCatching { svc.scope.toSet() }.getOrDefault(emptySet())
         return installed.filter { it.enabled }.flatMap { it.apps.keys }.distinct()
             .filter { it !in scope && isInstalled(it) }
     }
@@ -121,7 +179,11 @@ class BundleManager(private val context: Context, private val service: XposedSer
         runCatching { context.packageManager.getPackageInfo(packageName, 0) }.isSuccess
 
     fun requestScope(packages: List<String>, onResult: (String) -> Unit) {
-        service.requestScope(packages, object : XposedService.OnScopeEventListener {
+        val svc = service ?: run {
+            onResult("LSPosed framework service is currently inactive")
+            return
+        }
+        svc.requestScope(packages, object : XposedService.OnScopeEventListener {
             override fun onScopeRequestApproved(approved: List<String>) =
                 onResult("Added to scope: ${approved.joinToString()}")
 
@@ -133,8 +195,8 @@ class BundleManager(private val context: Context, private val service: XposedSer
     fun patches(bundle: InstalledBundle): List<AppPatchInfo> {
         val local = File(localDir, bundle.fileName)
         if (!local.exists()) {
-            // E.g. after the manager's data was cleared; restore from the remote file.
-            service.openRemoteFile(bundle.fileName).use { pfd ->
+            val svc = service ?: throw FileNotFoundException("Bundle ${bundle.name} file missing and service inactive")
+            svc.openRemoteFile(bundle.fileName).use { pfd ->
                 FileInputStream(pfd.fileDescriptor).use { input ->
                     local.outputStream().use { input.copyTo(it) }
                 }
@@ -150,7 +212,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
         }
 
     private fun deleteFiles(fileName: String) {
-        runCatching { service.deleteRemoteFile(fileName) }
+        service?.let { runCatching { it.deleteRemoteFile(fileName) } }
         File(localDir, fileName).delete()
         loadedApps.remove(fileName)
     }

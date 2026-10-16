@@ -20,13 +20,13 @@ android {
 
     defaultConfig {
         applicationId = "io.github.nexalloy.next"
-        versionCode = 12
+        versionCode = 15
         versionName = "3.1.$versionCode"
         buildConfigField("String", "COMMIT_HASH", "\"${gitCommitHashProvider.get()}\"")
         buildConfigField("long", "COMMIT_DATE", "${gitCommitDateProvider.get()}L")
         // GitHub repository checked for updates and used as the default patch source.
         // Builds by GitHub Actions of a fork use the fork's releases.
-        val updateRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("2eno/NexAlloyNext")
+        val updateRepository = providers.environmentVariable("GITHUB_REPOSITORY").getOrElse("a092devs/NexAlloyNext")
         buildConfigField("String", "UPDATE_REPOSITORY", "\"$updateRepository\"")
     }
     val ksFile = rootProject.file("signing.properties")
@@ -70,6 +70,9 @@ android {
     lint {
         checkReleaseBuilds = false
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -110,6 +113,13 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.navigation.compose)
     implementation(libs.work.runtime)
+
+    implementation(libs.miuix.ui)
+    implementation(libs.miuix.blur)
+    implementation(libs.miuix.icons)
+    implementation(libs.miuix.preference)
+    // Palette generation from seed colours, shared with the Miuix theme engine.
+    implementation(libs.material.kolor.utilities)
 }
 
 tasks.withType<Test>().configureEach {
@@ -119,4 +129,5 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     testImplementation(kotlin("test-junit5"))
+    testImplementation("org.json:json:20240303")
 }

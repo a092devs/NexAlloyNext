@@ -2,12 +2,16 @@ package io.github.nexalloy.ui.screens
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -15,10 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,14 +30,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.nexalloy.core.BuildConfig
 import io.github.nexalloy.core.R
 import io.github.nexalloy.ui.ManagerViewModel
+import io.github.nexalloy.ui.theme.isMiuixStyle
+import io.github.nexalloy.updates.AppPreferenceNames
+import io.github.nexalloy.updates.AppSettings
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
+import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
+import top.yukonga.miuix.kmp.preference.ArrowPreference
+import top.yukonga.miuix.kmp.preference.SwitchPreference
 
 private val licenses = listOf(
+    Triple("compose-miuix-ui", "Apache License 2.0, YuKongA", "https://github.com/compose-miuix-ui/miuix"),
     Triple("Morphe Patcher", "GNU General Public License v3.0", "https://github.com/MorpheApp/morphe-patcher"),
     Triple("DexKit", "LGPL-3.0, LuckyPray", "https://github.com/LuckyPray/DexKit"),
     Triple("smali / dexlib2", "BSD 3-Clause, Google", "https://github.com/google/smali"),
@@ -47,116 +63,394 @@ private val licenses = listOf(
 @Composable
 fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
     val settings = viewModel.settings
+    val state by viewModel.state.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val isMiuix = isMiuixStyle
+
     var notifyApp by remember { mutableStateOf(settings.notifyAppUpdates) }
     var notifyPatches by remember { mutableStateOf(settings.notifyPatchUpdates) }
     var iconHidden by remember { mutableStateOf(viewModel.launcherIconHidden) }
+    var showThemeDialog by remember { mutableStateOf(false) }
+    var showThemeStyleDialog by remember { mutableStateOf(false) }
+    var showColorSchemeDialog by remember { mutableStateOf(false) }
+    var showDiagnosticsDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
+
     val transparent = ListItemDefaults.colors(containerColor = Color.Transparent)
 
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection).padding(bottom = outerPadding.calculateBottomPadding()),
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_settings)) }, scrollBehavior = scrollBehavior) },
-    ) { padding ->
-        LazyColumn(contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 24.dp), modifier = Modifier.fillMaxSize()) {
-            item { SectionHeader(stringResource(R.string.settings_updates)) }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.setting_notify_app)) },
-                    supportingContent = { Text(stringResource(R.string.setting_notify_app_summary)) },
-                    trailingContent = {
-                        Switch(notifyApp, { notifyApp = it; settings.notifyAppUpdates = it })
-                    },
-                    colors = transparent,
-                    modifier = Modifier.clickable { notifyApp = !notifyApp; settings.notifyAppUpdates = notifyApp },
-                )
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.setting_notify_patches)) },
-                    supportingContent = { Text(stringResource(R.string.setting_notify_patches_summary)) },
-                    trailingContent = {
-                        Switch(notifyPatches, { notifyPatches = it; settings.notifyPatchUpdates = it })
-                    },
-                    colors = transparent,
-                    modifier = Modifier.clickable { notifyPatches = !notifyPatches; settings.notifyPatchUpdates = notifyPatches },
-                )
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.check_for_update_title)) },
-                    colors = transparent,
-                    modifier = Modifier.clickable { viewModel.checkUpdates(userInitiated = true) },
-                )
-            }
+    val currentThemeLabel = when (state.currentTheme) {
+        AppSettings.THEME_LIGHT -> stringResource(R.string.theme_light)
+        AppSettings.THEME_DARK -> stringResource(R.string.theme_dark)
+        else -> stringResource(R.string.theme_system)
+    }
 
-            item { SectionHeader(stringResource(R.string.settings_general)) }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.hide_icon_title)) },
-                    supportingContent = { Text(stringResource(R.string.hide_icon_summary)) },
-                    trailingContent = { Switch(iconHidden, { iconHidden = it; viewModel.launcherIconHidden = it }) },
-                    colors = transparent,
-                )
-            }
+    val currentThemeStyleLabel = when (state.currentThemeStyle) {
+        AppSettings.THEME_STYLE_MIUIX -> stringResource(R.string.theme_style_miuix)
+        else -> stringResource(R.string.theme_style_material3)
+    }
 
-            item { SectionHeader(stringResource(R.string.settings_about)) }
-            item {
-                ListItem(
-                    headlineContent = { Text("${stringResource(R.string.app_name)} ${BuildConfig.VERSION_NAME}") },
-                    supportingContent = {
-                        Text(
-                            "${BuildConfig.COMMIT_HASH} ${BuildConfig.BUILD_TYPE} · " +
-                                DateUtils.getRelativeTimeSpanString(BuildConfig.COMMIT_DATE * 1000)
+    val currentColorSchemeLabel = when (state.currentColorScheme) {
+        AppPreferenceNames.COLOR_SCHEME_VIOLET -> stringResource(R.string.color_scheme_violet)
+        AppPreferenceNames.COLOR_SCHEME_EMERALD -> stringResource(R.string.color_scheme_emerald)
+        AppPreferenceNames.COLOR_SCHEME_AMBER -> stringResource(R.string.color_scheme_amber)
+        AppPreferenceNames.COLOR_SCHEME_ROSE -> stringResource(R.string.color_scheme_rose)
+        AppPreferenceNames.COLOR_SCHEME_OCEAN -> stringResource(R.string.color_scheme_ocean)
+        else -> stringResource(R.string.color_scheme_default)
+    }
+
+    if (isMiuix) {
+        // Genuine Miuix layout with Card containers, SmallTitle headers, and native Miuix preferences
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = outerPadding.calculateBottomPadding()),
+        ) {
+            MiuixTopAppBar(title = stringResource(R.string.nav_settings))
+
+            LazyColumn(
+                contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_updates)) }
+                item {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        SwitchPreference(
+                            title = stringResource(R.string.setting_notify_app),
+                            summary = stringResource(R.string.setting_notify_app_summary),
+                            checked = notifyApp,
+                            onCheckedChange = { notifyApp = it; settings.notifyAppUpdates = it },
                         )
-                    },
-                    colors = transparent,
-                )
+                        SwitchPreference(
+                            title = stringResource(R.string.setting_notify_patches),
+                            summary = stringResource(R.string.setting_notify_patches_summary),
+                            checked = notifyPatches,
+                            onCheckedChange = { notifyPatches = it; settings.notifyPatchUpdates = it },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.check_for_update_title),
+                            onClick = { viewModel.checkUpdates(userInitiated = true) },
+                        )
+                    }
+                }
+
+                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_appearance)) }
+                item {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        ArrowPreference(
+                            title = stringResource(R.string.theme_title),
+                            summary = currentThemeLabel,
+                            onClick = { showThemeDialog = true },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.theme_style_title),
+                            summary = currentThemeStyleLabel,
+                            onClick = { showThemeStyleDialog = true },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.color_scheme_title),
+                            summary = currentColorSchemeLabel,
+                            onClick = { showColorSchemeDialog = true },
+                        )
+                        // Floating navigation is a Miuix-only arrangement, so this row only exists in
+                        // the Miuix presentation. It is off by default and can be enabled here.
+                        SwitchPreference(
+                            title = stringResource(R.string.miuix_floating_nav_title),
+                            summary = stringResource(R.string.miuix_floating_nav_summary),
+                            checked = state.floatingNavigation,
+                            onCheckedChange = { viewModel.setFloatingNavigation(it) },
+                        )
+                    }
+                }
+
+                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_general)) }
+                item {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        SwitchPreference(
+                            title = stringResource(R.string.hide_icon_title),
+                            summary = stringResource(R.string.hide_icon_summary),
+                            checked = iconHidden,
+                            onCheckedChange = { iconHidden = it; viewModel.launcherIconHidden = it },
+                        )
+                    }
+                }
+
+                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.diagnostics_title)) }
+                item {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        ArrowPreference(
+                            title = stringResource(R.string.action_clear_cache),
+                            summary = stringResource(R.string.action_clear_cache_summary),
+                            onClick = { viewModel.clearDexKitCache() },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.diagnostics_title),
+                            summary = stringResource(R.string.diagnostics_summary),
+                            onClick = { showDiagnosticsDialog = true },
+                        )
+                    }
+                }
+
+                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_about)) }
+                item {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                        ArrowPreference(
+                            title = "${stringResource(R.string.app_name)} ${BuildConfig.VERSION_NAME}",
+                            summary = "${BuildConfig.COMMIT_HASH} ${BuildConfig.BUILD_TYPE} · ${DateUtils.getRelativeTimeSpanString(BuildConfig.COMMIT_DATE * 1000)}",
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.source_code),
+                            summary = "github.com/${BuildConfig.UPDATE_REPOSITORY}",
+                            onClick = { openUrl(context, "https://github.com/${BuildConfig.UPDATE_REPOSITORY}") },
+                        )
+                        ArrowPreference(
+                            title = stringResource(R.string.open_source_license),
+                            onClick = { showLicenses = true },
+                        )
+                    }
+                }
+
+                item {
+                    Text(
+                        stringResource(R.string.slogan_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(20.dp),
+                    )
+                }
             }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.source_code)) },
-                    supportingContent = { Text("github.com/${BuildConfig.UPDATE_REPOSITORY}") },
-                    colors = transparent,
-                    modifier = Modifier.clickable { openUrl(context, "https://github.com/${BuildConfig.UPDATE_REPOSITORY}") },
-                )
+        }
+    } else {
+        // Standard Material 3 layout
+        Scaffold(
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .padding(bottom = outerPadding.calculateBottomPadding()),
+            topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_settings)) }, scrollBehavior = scrollBehavior) },
+        ) { padding ->
+            LazyColumn(
+                contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 24.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                item { SectionHeader(stringResource(R.string.settings_updates)) }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.setting_notify_app)) },
+                        supportingContent = { Text(stringResource(R.string.setting_notify_app_summary)) },
+                        trailingContent = {
+                            Switch(notifyApp, { notifyApp = it; settings.notifyAppUpdates = it })
+                        },
+                        colors = transparent,
+                        modifier = Modifier.clickable { notifyApp = !notifyApp; settings.notifyAppUpdates = notifyApp },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.setting_notify_patches)) },
+                        supportingContent = { Text(stringResource(R.string.setting_notify_patches_summary)) },
+                        trailingContent = {
+                            Switch(notifyPatches, { notifyPatches = it; settings.notifyPatchUpdates = it })
+                        },
+                        colors = transparent,
+                        modifier = Modifier.clickable { notifyPatches = !notifyPatches; settings.notifyPatchUpdates = notifyPatches },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.check_for_update_title)) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { viewModel.checkUpdates(userInitiated = true) },
+                    )
+                }
+
+                item { SectionHeader(stringResource(R.string.settings_appearance)) }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.theme_title)) },
+                        supportingContent = { Text(currentThemeLabel) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showThemeDialog = true },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.theme_style_title)) },
+                        supportingContent = { Text(currentThemeStyleLabel) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showThemeStyleDialog = true },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.color_scheme_title)) },
+                        supportingContent = { Text(currentColorSchemeLabel) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showColorSchemeDialog = true },
+                    )
+                }
+
+                item { SectionHeader(stringResource(R.string.settings_general)) }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.hide_icon_title)) },
+                        supportingContent = { Text(stringResource(R.string.hide_icon_summary)) },
+                        trailingContent = { Switch(iconHidden, { iconHidden = it; viewModel.launcherIconHidden = it }) },
+                        colors = transparent,
+                    )
+                }
+
+                item { SectionHeader(stringResource(R.string.diagnostics_title)) }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.action_clear_cache)) },
+                        supportingContent = { Text(stringResource(R.string.action_clear_cache_summary)) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { viewModel.clearDexKitCache() },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.diagnostics_title)) },
+                        supportingContent = { Text(stringResource(R.string.diagnostics_summary)) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showDiagnosticsDialog = true },
+                    )
+                }
+
+                item { SectionHeader(stringResource(R.string.settings_about)) }
+                item {
+                    ListItem(
+                        headlineContent = { Text("${stringResource(R.string.app_name)} ${BuildConfig.VERSION_NAME}") },
+                        supportingContent = {
+                            Text(
+                                "${BuildConfig.COMMIT_HASH} ${BuildConfig.BUILD_TYPE} · " +
+                                    DateUtils.getRelativeTimeSpanString(BuildConfig.COMMIT_DATE * 1000)
+                            )
+                        },
+                        colors = transparent,
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.source_code)) },
+                        supportingContent = { Text("github.com/${BuildConfig.UPDATE_REPOSITORY}") },
+                        colors = transparent,
+                        modifier = Modifier.clickable { openUrl(context, "https://github.com/${BuildConfig.UPDATE_REPOSITORY}") },
+                    )
+                }
+                item {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.open_source_license)) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { showLicenses = true },
+                    )
+                }
+                item {
+                    Text(
+                        stringResource(R.string.slogan_summary),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
             }
-            item {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.open_source_license)) },
-                    colors = transparent,
-                    modifier = Modifier.clickable { showLicenses = true },
-                )
-            }
-            item {
+        }
+    }
+
+    if (showThemeDialog) {
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.theme_title),
+            options = listOf(
+                AppSettings.THEME_SYSTEM to stringResource(R.string.theme_system),
+                AppSettings.THEME_LIGHT to stringResource(R.string.theme_light),
+                AppSettings.THEME_DARK to stringResource(R.string.theme_dark),
+            ),
+            selected = state.currentTheme,
+            onSelect = { viewModel.setTheme(it) },
+            onDismissRequest = { showThemeDialog = false },
+        )
+    }
+
+    if (showThemeStyleDialog) {
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.theme_style_title),
+            options = listOf(
+                AppSettings.THEME_STYLE_MATERIAL3 to stringResource(R.string.theme_style_material3),
+                AppSettings.THEME_STYLE_MIUIX to stringResource(R.string.theme_style_miuix),
+            ),
+            selected = state.currentThemeStyle,
+            onSelect = { viewModel.setThemeStyle(it) },
+            onDismissRequest = { showThemeStyleDialog = false },
+        )
+    }
+
+    if (showColorSchemeDialog) {
+        ThemedRadioDialog(
+            show = true,
+            title = stringResource(R.string.color_scheme_title),
+            options = listOf(
+                AppPreferenceNames.COLOR_SCHEME_DEFAULT to stringResource(R.string.color_scheme_default),
+                AppPreferenceNames.COLOR_SCHEME_VIOLET to stringResource(R.string.color_scheme_violet),
+                AppPreferenceNames.COLOR_SCHEME_EMERALD to stringResource(R.string.color_scheme_emerald),
+                AppPreferenceNames.COLOR_SCHEME_AMBER to stringResource(R.string.color_scheme_amber),
+                AppPreferenceNames.COLOR_SCHEME_ROSE to stringResource(R.string.color_scheme_rose),
+                AppPreferenceNames.COLOR_SCHEME_OCEAN to stringResource(R.string.color_scheme_ocean),
+            ),
+            selected = state.currentColorScheme,
+            onSelect = { viewModel.setColorScheme(it) },
+            onDismissRequest = { showColorSchemeDialog = false },
+        )
+    }
+
+    if (showDiagnosticsDialog) {
+        val diagnosticsText = remember(showDiagnosticsDialog) { viewModel.exportDiagnostics() }
+        ThemedDialog(
+            show = true,
+            title = stringResource(R.string.diagnostics_title),
+            onDismissRequest = { showDiagnosticsDialog = false },
+            confirmText = stringResource(R.string.action_copy_diagnostics),
+            onConfirm = {
+                clipboardManager.setText(AnnotatedString(diagnosticsText))
+                viewModel.message(R.string.diagnostics_copied)
+            },
+            dismissText = stringResource(android.R.string.ok),
+            onDismiss = { showDiagnosticsDialog = false },
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState()),
+            ) {
                 Text(
-                    stringResource(R.string.slogan_summary),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(16.dp),
+                    text = diagnosticsText,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                 )
             }
         }
     }
 
     if (showLicenses) {
-        AlertDialog(
+        ThemedDialog(
+            show = true,
+            title = stringResource(R.string.open_source_license),
             onDismissRequest = { showLicenses = false },
-            title = { Text(stringResource(R.string.open_source_license)) },
-            text = {
-                Column {
-                    licenses.forEach { (name, license, url) ->
-                        ListItem(
-                            headlineContent = { Text(name) },
-                            supportingContent = { Text(license) },
-                            colors = transparent,
-                            modifier = Modifier.clickable { openUrl(context, url) },
-                        )
-                    }
+            confirmText = stringResource(android.R.string.ok),
+            onConfirm = { showLicenses = false },
+        ) {
+            Column {
+                licenses.forEach { (name, license, url) ->
+                    ListItem(
+                        headlineContent = { Text(name) },
+                        supportingContent = { Text(license) },
+                        colors = transparent,
+                        modifier = Modifier.clickable { openUrl(context, url) },
+                    )
                 }
-            },
-            confirmButton = { TextButton(onClick = { showLicenses = false }) { Text(stringResource(android.R.string.ok)) } },
-        )
+            }
+        }
     }
 }
