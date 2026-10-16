@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -298,6 +299,7 @@ private fun AppIconBadge(
 
 @Composable
 fun CompatibilityChip(status: CompatibilityStatus) {
+    val isDark = isSystemInDarkTheme()
     when (status) {
         is CompatibilityStatus.Compatible -> StatusChip(
             label = if (status.isExperimental) {
@@ -306,22 +308,22 @@ fun CompatibilityChip(status: CompatibilityStatus) {
                 stringResource(R.string.status_compatible)
             },
             icon = if (status.isExperimental) Icons.Outlined.Science else Icons.Outlined.CheckCircle,
-            containerColor = Color(0xFFD4EDDA),
-            contentColor = Color(0xFF155724),
+            containerColor = if (isDark) Color(0xFF10B981).copy(alpha = 0.22f) else Color(0xFF10B981).copy(alpha = 0.12f),
+            contentColor = if (isDark) Color(0xFF34D399) else Color(0xFF065F46),
         )
 
         is CompatibilityStatus.Dynamic -> StatusChip(
             label = stringResource(R.string.status_dynamic),
             icon = Icons.Outlined.AutoAwesome,
-            containerColor = Color(0xFFD1ECF1),
-            contentColor = Color(0xFF0C5460),
+            containerColor = if (isDark) Color(0xFF0284C7).copy(alpha = 0.22f) else Color(0xFF0284C7).copy(alpha = 0.12f),
+            contentColor = if (isDark) Color(0xFF38BDF8) else Color(0xFF075985),
         )
 
         is CompatibilityStatus.CompatibleUntested -> StatusChip(
             label = stringResource(R.string.status_untested, status.installedVersion),
             icon = Icons.AutoMirrored.Outlined.HelpOutline,
-            containerColor = Color(0xFFFFF3CD),
-            contentColor = Color(0xFF856404),
+            containerColor = if (isDark) Color(0xFFF59E0B).copy(alpha = 0.22f) else Color(0xFFF59E0B).copy(alpha = 0.14f),
+            contentColor = if (isDark) Color(0xFFFCD34D) else Color(0xFF92400E),
         )
 
         is CompatibilityStatus.Incompatible -> StatusChip(
@@ -334,7 +336,7 @@ fun CompatibilityChip(status: CompatibilityStatus) {
         is CompatibilityStatus.MissingBundle -> StatusChip(
             label = stringResource(R.string.status_missing_bundle),
             icon = Icons.Outlined.WarningAmber,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 

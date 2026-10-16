@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.16
+
+- In-App Updater: Directly download and launch package installation for NexAlloyNext releases inside the app without external browser redirection, using `FileProvider` and background progress reporting.
+- Supported Uninstalled Apps Catalog: Ensure all applications supported across patch bundles (such as YouTube Music, Proton VPN, Spotify, etc.) are discovered and displayed in the app catalog with verified recommendations even before installation.
+- Miuix & HyperOS Theme Consistency: Replace hardcoded page backgrounds with `MiuixTheme.colorScheme.background`, replace Bootstrap badge colors with adaptive translucent squircle chips in dark/light themes, wrap patch toggle preferences in rounded `MiuixCard` groups, and distinguish primary vs secondary buttons.
+
 ## 3.1.15
 
 - Silence routine debug toasts and restrict initialization toast notifications to the main application process (`isMainProcess()`) to eliminate spam across multi-process application startups.

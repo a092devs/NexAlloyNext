@@ -57,6 +57,9 @@ import io.github.nexalloy.ui.navigateTopLevel
 import io.github.nexalloy.ui.theme.isMiuixStyle
 import io.github.nexalloy.ui.theme.nexAlloyCardBorder
 import io.github.nexalloy.ui.theme.nexAlloyCardShape
+import io.github.nexalloy.updates.AppInstaller
+import io.github.nexalloy.updates.AppRelease
+import io.github.nexalloy.updates.UpdateDownloadState
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
@@ -82,6 +85,7 @@ fun HomeScreen(viewModel: ManagerViewModel, navController: NavHostController, ou
         onRequestScope = { viewModel.requestMissingScope() },
         onOpenPatches = { navController.navigateTopLevel(MainActivity.DESTINATION_PATCHES) },
         onOpenApp = { navController.navigate("${MainActivity.DESTINATION_APP}/$it") },
+        onDownloadUpdate = viewModel::downloadAndInstallUpdate,
     )
 }
 
@@ -96,6 +100,7 @@ fun HomeContent(
     onRequestScope: () -> Unit,
     onOpenPatches: () -> Unit,
     onOpenApp: (String) -> Unit,
+    onDownloadUpdate: (AppRelease) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -143,11 +148,34 @@ fun HomeContent(
                 // App Update Notification
                 state.appUpdate?.let { release ->
                     item {
+                        val downloadState = state.updateDownloadState
+                        val isDownloading = downloadState is UpdateDownloadState.Downloading
+                        val downloadProgress = if (downloadState is UpdateDownloadState.Downloading && downloadState.progress >= 0f) {
+                            (downloadState.progress * 100).toInt()
+                        } else null
+
+                        val primaryLabel = when {
+                            isDownloading && downloadProgress != null -> stringResource(R.string.downloading_update, downloadProgress)
+                            isDownloading -> "Downloading update…"
+                            downloadState is UpdateDownloadState.ReadyToInstall -> stringResource(R.string.action_install)
+                            else -> stringResource(R.string.action_download)
+                        }
+
                         ActionCard(
                             icon = Icons.Filled.Notifications,
                             title = stringResource(R.string.app_update_title, release.tag),
-                            text = stringResource(R.string.app_update_text),
-                            primary = stringResource(R.string.action_download) to { openUrl(context, release.apkUrl ?: release.pageUrl) },
+                            text = if (downloadState is UpdateDownloadState.Error) {
+                                stringResource(R.string.download_failed, downloadState.message)
+                            } else {
+                                stringResource(R.string.app_update_text)
+                            },
+                            primary = primaryLabel to {
+                                if (downloadState is UpdateDownloadState.ReadyToInstall) {
+                                    AppInstaller.installApk(context, downloadState.apkFile)
+                                } else if (!isDownloading) {
+                                    onDownloadUpdate(release)
+                                }
+                            },
                             secondary = stringResource(R.string.action_changelog) to { changelog = release.tag to release.notes },
                         )
                     }
@@ -452,18 +480,10 @@ private fun ActionCardContent(
                     .padding(top = 10.dp),
             ) {
                 secondary?.let { (label, action) ->
-                    if (isMiuix) {
-                        MiuixButton(onClick = action) { Text(label) }
-                    } else {
-                        OutlinedButton(onClick = action) { Text(label) }
-                    }
+                    ThemedOutlinedButton(label = label, onClick = action)
                 }
                 primary?.let { (label, action) ->
-                    if (isMiuix) {
-                        MiuixButton(onClick = action) { Text(label) }
-                    } else {
-                        Button(onClick = action) { Text(label) }
-                    }
+                    ThemedFilledButton(label = label, onClick = action)
                 }
             }
         }

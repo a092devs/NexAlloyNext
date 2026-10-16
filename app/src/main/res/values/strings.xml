@@ -148,4 +148,7 @@
     <string name="source_enabled">Enabled</string>
     <string name="source_disabled">Disabled</string>
     <string name="last_refreshed">Refreshed: %s</string>
+    <string name="downloading_update">Downloading update… %d%%</string>
+    <string name="download_failed">Download failed: %s</string>
+    <string name="app_update_no_apk">No direct APK download asset available for this release.</string>
 </resources>

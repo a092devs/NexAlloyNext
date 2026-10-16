@@ -61,6 +61,7 @@ import io.github.nexalloy.patchPreferenceKey
 import io.github.nexalloy.ui.BundlePatches
 import io.github.nexalloy.ui.ManagerViewModel
 import io.github.nexalloy.ui.theme.isMiuixStyle
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
@@ -328,29 +329,53 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                 SectionTitle(title)
                             }
 
-                            items(filteredPatches, key = { "${group.bundle.id}/${it.first.name}" }) { (patch, _) ->
-                                val key = patchPreferenceKey(group.bundle.id, patch.name)
-                                val checked = enabled[key] ?: patch.use
-                                fun toggle(value: Boolean) {
-                                    enabled[key] = value
-                                    viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
-                                }
-                                val isDuplicate = patch.name in group.duplicateNames
-                                val descriptionText = patch.description.takeIf { it.isNotEmpty() }
-                                val supportingText = if (isDuplicate) {
-                                    listOfNotNull(descriptionText, "⚠️ Duplicate: also provided by another active bundle. Handled deterministically by patch engine.").joinToString(" • ")
-                                } else {
-                                    descriptionText
-                                }
+                            if (isMiuix) {
+                                item(key = "${group.bundle.id}_card") {
+                                    MiuixCard(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                                    ) {
+                                        for ((patch, _) in filteredPatches) {
+                                            val key = patchPreferenceKey(group.bundle.id, patch.name)
+                                            val checked = enabled[key] ?: patch.use
+                                            fun toggle(value: Boolean) {
+                                                enabled[key] = value
+                                                viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
+                                            }
+                                            val isDuplicate = patch.name in group.duplicateNames
+                                            val descriptionText = patch.description.takeIf { it.isNotEmpty() }
+                                            val supportingText = if (isDuplicate) {
+                                                listOfNotNull(descriptionText, "⚠️ Duplicate: also provided by another active bundle. Handled deterministically by patch engine.").joinToString(" • ")
+                                            } else {
+                                                descriptionText
+                                            }
 
-                                if (isMiuix) {
-                                    SwitchPreference(
-                                        title = patch.name,
-                                        summary = supportingText,
-                                        checked = checked,
-                                        onCheckedChange = ::toggle,
-                                    )
-                                } else {
+                                            SwitchPreference(
+                                                title = patch.name,
+                                                summary = supportingText,
+                                                checked = checked,
+                                                onCheckedChange = ::toggle,
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                items(filteredPatches, key = { "${group.bundle.id}/${it.first.name}" }) { (patch, _) ->
+                                    val key = patchPreferenceKey(group.bundle.id, patch.name)
+                                    val checked = enabled[key] ?: patch.use
+                                    fun toggle(value: Boolean) {
+                                        enabled[key] = value
+                                        viewModel.setPatchEnabled(packageName, group.bundle, patch, value)
+                                    }
+                                    val isDuplicate = patch.name in group.duplicateNames
+                                    val descriptionText = patch.description.takeIf { it.isNotEmpty() }
+                                    val supportingText = if (isDuplicate) {
+                                        listOfNotNull(descriptionText, "⚠️ Duplicate: also provided by another active bundle. Handled deterministically by patch engine.").joinToString(" • ")
+                                    } else {
+                                        descriptionText
+                                    }
+
                                     ListItem(
                                         headlineContent = {
                                             Text(

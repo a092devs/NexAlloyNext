@@ -321,7 +321,7 @@ private fun MiuixManagerApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (isDark) Color(0xFF1A1B20) else Color(0xFFFFFDFBFF)),
+            .background(MiuixTheme.colorScheme.background),
     ) {
         if (floatingNavigation) {
             MiuixFloatingNavigationApp(navController, viewModel, isTopLevel)

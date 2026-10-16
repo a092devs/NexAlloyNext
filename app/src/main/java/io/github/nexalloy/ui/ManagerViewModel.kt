@@ -27,10 +27,12 @@ import io.github.nexalloy.manager.SourceRelease
 import io.github.nexalloy.manager.SourceReleaseCache
 import io.github.nexalloy.manager.SourceStore
 import io.github.nexalloy.patchPreferenceKey
-import io.github.nexalloy.updates.AppRelease
+import io.github.nexalloy.updates.AppInstaller
 import io.github.nexalloy.updates.AppPreferenceNames
+import io.github.nexalloy.updates.AppRelease
 import io.github.nexalloy.updates.AppSettings
 import io.github.nexalloy.updates.AppUpdateChecker
+import io.github.nexalloy.updates.UpdateDownloadState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,6 +58,7 @@ data class ManagerState(
     /** Installed apps patched by enabled bundles that are missing from the module scope. */
     val missingScope: List<String> = emptyList(),
     val appUpdate: AppRelease? = null,
+    val updateDownloadState: UpdateDownloadState = UpdateDownloadState.Idle,
     val checkingUpdates: Boolean = false,
     /** Full catalog of supported and installed applications. */
     val appCatalog: List<AppItemState> = emptyList(),
@@ -275,6 +278,39 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     appUpdate.isFailure -> message(R.string.update_check_failed, appUpdate.exceptionOrNull()?.message)
                     state.appUpdate == null && state.sourcesWithUpdates.isEmpty() -> message(R.string.up_to_date)
                 }
+            }
+        }
+    }
+
+    /**
+     * Directly downloads and installs an update for NexAlloyNext in-app without third-party browsers.
+     */
+    fun downloadAndInstallUpdate(release: AppRelease) {
+        val apkUrl = release.apkUrl
+        if (apkUrl.isNullOrBlank()) {
+            message(R.string.app_update_no_apk)
+            return
+        }
+
+        viewModelScope.launch {
+            val result = AppInstaller.downloadApk(
+                context = context,
+                tag = release.tag,
+                apkUrl = apkUrl,
+                onProgress = { downloadState ->
+                    _state.update { it.copy(updateDownloadState = downloadState) }
+                },
+            )
+
+            result.onSuccess { apkFile ->
+                _state.update { it.copy(updateDownloadState = UpdateDownloadState.ReadyToInstall(apkFile)) }
+                val installResult = AppInstaller.installApk(context, apkFile)
+                installResult.onFailure { err ->
+                    message(R.string.install_failed, err.message)
+                }
+            }.onFailure { err ->
+                _state.update { it.copy(updateDownloadState = UpdateDownloadState.Error(err.message ?: "Download failed")) }
+                message(R.string.download_failed, err.message)
             }
         }
     }
