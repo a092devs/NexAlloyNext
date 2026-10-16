@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.17
+
+- Companion Patch Catalog Alignment:
+  * Migrated Instagram (`com.instagram.android`) default patch source to `a092devs Patches` with verified compatibility targets `451.0.0.53.80`, `450.0.0.46.79`, and `447.0.0.55.81` ported from `SysAdminDoc/HushGram`.
+  * Expanded Facebook (`com.facebook.katana`) target recommendations to include `582.0.0.50.54` and `581.0.0.45.54` ported from `SysAdminDoc/Hushfacebook`.
+- Repository & Pipeline Maintenance:
+  * Synced `.gitignore` rules across modules and ensured automated release pipelines trigger cleanly on pushed tags without commit squashing.
+
 ## 3.1.16
 
 - In-App Updater: Directly download and launch package installation for NexAlloyNext releases inside the app without external browser redirection, using `FileProvider` and background progress reporting.

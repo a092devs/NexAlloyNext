@@ -158,7 +158,7 @@ object AppDiscovery {
             appName = "Facebook",
             defaultBundleName = "a092devs Patches",
             appIconColor = 0x0866FF,
-            targets = listOf(AppTarget("582.0.0.50.54")),
+            targets = listOf(AppTarget("582.0.0.50.54"), AppTarget("581.0.0.45.54")),
         ),
         KnownSupportedApp(
             packageName = "com.discord",
@@ -189,9 +189,13 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.instagram.android",
             appName = "Instagram",
-            defaultBundleName = "Piko Patches",
-            appIconColor = 0xFC483C,
-            targets = listOf(AppTarget("447.0.0.55.81")),
+            defaultBundleName = "a092devs Patches",
+            appIconColor = 0xE1306C,
+            targets = listOf(
+                AppTarget("451.0.0.53.80"),
+                AppTarget("450.0.0.46.79"),
+                AppTarget("447.0.0.55.81"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.twitter.android",
