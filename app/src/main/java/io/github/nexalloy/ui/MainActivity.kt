@@ -14,9 +14,7 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -67,11 +65,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -92,7 +88,6 @@ import io.github.nexalloy.ui.screens.SettingsScreen
 import io.github.nexalloy.ui.theme.NexAlloyTheme
 import io.github.nexalloy.ui.theme.isMiuixStyle
 import io.github.nexalloy.updates.AppSettings
-import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
@@ -497,9 +492,8 @@ private fun MiuixFloatingNavigationApp(
 }
 
 /**
- * Items of the floating navigation bar with a selection pill that slides between the entries.
- * The pill position derives from the fixed item width, so the slide stays in sync without any
- * extra measurement.
+ * Items of the floating navigation bar. Each item handles its own selection state
+ * without an awkward horizontal slide effect across tabs.
  */
 @Composable
 private fun MiuixFloatingNavItems(
@@ -507,51 +501,23 @@ private fun MiuixFloatingNavItems(
     isDark: Boolean,
     onSelect: (String) -> Unit,
 ) {
-    val selectedIndex = topLevel
-        .indexOfFirst { it.route == selectedRoute }
-        .coerceAtLeast(0)
-    val animatedIndex = remember { Animatable(selectedIndex.toFloat()) }
-    LaunchedEffect(selectedIndex) {
-        animatedIndex.animateTo(
-            targetValue = selectedIndex.toFloat(),
-            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
-        )
-    }
-    val itemWidthPx = with(LocalDensity.current) { FloatingItemWidth.toPx() }
-    val indicatorColor = MiuixTheme.colorScheme.primary.copy(alpha = if (isDark) 0.26f else 0.16f)
-
-    Box {
-        // Selection pill: inset inside the item so its stadium corners stay clear of the bar's
-        // rounded ends while it slides, and stay concentric with the item slot.
-        Box(
-            modifier = Modifier
-                .offset { IntOffset((animatedIndex.value * itemWidthPx).roundToInt(), 0) }
-                .size(width = FloatingItemWidth, height = FloatingItemHeight),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(width = FloatingItemWidth - 12.dp, height = FloatingItemHeight - 12.dp)
-                    .clip(RoundedCornerShape(percent = 50))
-                    .background(indicatorColor),
+    Row {
+        topLevel.forEach { item ->
+            MiuixFloatingNavItem(
+                selected = selectedRoute == item.route,
+                onClick = { onSelect(item.route) },
+                icon = item.miuixIcon,
+                label = stringResource(item.label),
+                isDark = isDark,
             )
-        }
-        Row {
-            topLevel.forEach { item ->
-                MiuixFloatingNavItem(
-                    selected = selectedRoute == item.route,
-                    onClick = { onSelect(item.route) },
-                    icon = item.miuixIcon,
-                    label = stringResource(item.label),
-                )
-            }
         }
     }
 }
 
 /**
  * Item of the floating navigation bar: the official icon treatment plus the label under the
- * glyph, sized for a comfortable touch target. Selection animates the tint and a subtle scale.
+ * glyph, sized for a comfortable touch target. Selection uses an in-place pill indicator
+ * without sliding across the bar.
  */
 @Composable
 private fun MiuixFloatingNavItem(
@@ -559,10 +525,13 @@ private fun MiuixFloatingNavItem(
     onClick: () -> Unit,
     icon: ImageVector,
     label: String,
+    isDark: Boolean,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val baseColor = MiuixTheme.colorScheme.onSurfaceContainer
+    val indicatorColor = MiuixTheme.colorScheme.primary.copy(alpha = if (isDark) 0.26f else 0.16f)
+
     val targetAlpha = when {
         pressed -> if (selected) 0.55f else 0.75f
         selected -> 1f
@@ -570,25 +539,19 @@ private fun MiuixFloatingNavItem(
     }
     val alpha by animateFloatAsState(
         targetValue = targetAlpha,
-        animationSpec = tween(180),
+        animationSpec = tween(150),
         label = "floatingNavItemAlpha",
     )
-    val scale by animateFloatAsState(
-        targetValue = if (selected) 1f else 0.95f,
-        animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMedium),
-        label = "floatingNavItemScale",
+    val pillAlpha by animateFloatAsState(
+        targetValue = if (selected) 1f else 0f,
+        animationSpec = tween(150),
+        label = "floatingNavItemPillAlpha",
     )
     val tint = baseColor.copy(alpha = alpha)
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
             .size(width = FloatingItemWidth, height = FloatingItemHeight)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .clip(RoundedCornerShape(17.dp))
             .selectable(
                 selected = selected,
@@ -597,21 +560,36 @@ private fun MiuixFloatingNavItem(
                 interactionSource = interactionSource,
                 indication = null,
             ),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier.size(24.dp),
-        )
-        Spacer(modifier = Modifier.height(3.dp))
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-            color = tint,
-            maxLines = 1,
-        )
+        if (pillAlpha > 0f) {
+            Box(
+                modifier = Modifier
+                    .size(width = FloatingItemWidth - 12.dp, height = FloatingItemHeight - 12.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(indicatorColor.copy(alpha = indicatorColor.alpha * pillAlpha)),
+            )
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = tint,
+                modifier = Modifier.size(24.dp),
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = tint,
+                maxLines = 1,
+            )
+        }
     }
 }
 

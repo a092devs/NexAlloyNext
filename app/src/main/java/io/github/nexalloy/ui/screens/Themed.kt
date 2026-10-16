@@ -10,18 +10,24 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -61,11 +67,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -421,7 +429,110 @@ fun ThemedChip(
     }
 }
 
-/** Single-line search field with a leading search glyph and a clear action. */
+/**
+ * Compact filled action button sized specifically for cards, preventing
+ * oversized buttons while maintaining a comfortable touch target.
+ */
+@Composable
+fun ThemedCompactFilledButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+) {
+    val isMiuix = isMiuixStyle
+    val shape = RoundedCornerShape(17.dp)
+    if (isMiuix) {
+        val bg = if (enabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.disabledPrimaryButton
+        val fg = if (enabled) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.disabledOnPrimaryButton
+        Row(
+            modifier = modifier
+                .height(34.dp)
+                .clip(shape)
+                .background(bg)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(label, color = fg, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+    } else {
+        FilledTonalButton(
+            onClick = onClick,
+            modifier = modifier.height(34.dp),
+            enabled = enabled,
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+            shape = shape,
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+/**
+ * Compact secondary action button (e.g. Changelog).
+ */
+@Composable
+fun ThemedCompactTonalButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+) {
+    val isMiuix = isMiuixStyle
+    val shape = RoundedCornerShape(17.dp)
+    if (isMiuix) {
+        val bg = MiuixTheme.colorScheme.surfaceContainerHighest
+        val fg = MiuixTheme.colorScheme.onSurfaceContainerHighest
+        Row(
+            modifier = modifier
+                .height(34.dp)
+                .clip(shape)
+                .background(bg)
+                .clickable(enabled = enabled, onClick = onClick)
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = fg, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(label, color = fg, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        }
+    } else {
+        OutlinedButton(
+            onClick = onClick,
+            modifier = modifier.height(34.dp),
+            enabled = enabled,
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+            shape = shape,
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+            }
+            Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+/**
+ * Single-line search field with a leading search glyph and a clear action.
+ * Uses a centered capsule layout with precise vertical alignment between
+ * the leading search glyph and the placeholder/input text on both MIUIX and Material 3.
+ */
 @Composable
 fun ThemedSearchField(
     value: String,
@@ -430,55 +541,85 @@ fun ThemedSearchField(
     modifier: Modifier = Modifier,
 ) {
     val icons = appIcons()
-    val clearAction: (@Composable () -> Unit)? = if (value.isNotEmpty()) {
-        {
-            ThemedIconButton(onClick = { onValueChange("") }) {
+    val isMiuix = isMiuixStyle
+    val shape = RoundedCornerShape(24.dp)
+    val backgroundColor = if (isMiuix) {
+        MiuixTheme.colorScheme.surfaceContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+    val contentColor = if (isMiuix) {
+        MiuixTheme.colorScheme.onSurfaceContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    val placeholderColor = if (isMiuix) {
+        MiuixTheme.colorScheme.onSurfaceSecondary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val iconTint = if (isMiuix) {
+        MiuixTheme.colorScheme.onSurfaceVariantSummary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(46.dp)
+            .clip(shape)
+            .background(backgroundColor)
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icons.search,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (value.isEmpty()) {
+                Text(
+                    text = placeholder,
+                    color = placeholderColor,
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                )
+            }
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                textStyle = TextStyle(
+                    color = contentColor,
+                    fontSize = 15.sp,
+                ),
+                cursorBrush = SolidColor(
+                    if (isMiuix) MiuixTheme.colorScheme.primary else MaterialTheme.colorScheme.primary
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (value.isNotEmpty()) {
+            Spacer(modifier = Modifier.width(6.dp))
+            ThemedIconButton(
+                onClick = { onValueChange("") },
+                modifier = Modifier.size(28.dp),
+            ) {
                 Icon(
                     imageVector = icons.clear,
                     contentDescription = null,
-                    tint = if (isMiuixStyle) {
-                        MiuixTheme.colorScheme.onSurfaceVariantSummary
-                    } else {
-                        Color.Unspecified
-                    },
+                    tint = iconTint,
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
-    } else {
-        null
-    }
-
-    if (isMiuixStyle) {
-        MiuixTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            label = placeholder,
-            useLabelAsPlaceholder = true,
-            // Placeholder and glyphs otherwise inherit the low-contrast onSecondaryContainer
-            // pairing (#7C7C7C on #434343); the brighter roles stay readable on the field.
-            labelColor = MiuixTheme.colorScheme.onSurfaceSecondary,
-            leadingIcon = {
-                Icon(
-                    imageVector = icons.search,
-                    contentDescription = null,
-                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-            },
-            trailingIcon = clearAction,
-            singleLine = true,
-        )
-    } else {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            placeholder = { Text(placeholder) },
-            leadingIcon = { Icon(icons.search, contentDescription = null) },
-            trailingIcon = clearAction?.let { action -> { action() } },
-            singleLine = true,
-            shape = nexAlloyCardShape(),
-        )
     }
 }
 
@@ -636,6 +777,93 @@ fun ThemedRadioDialog(
                         RadioButton(selected = selected == value, onClick = select)
                     }
                     Text(text = label, modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Clean, readable, scrollable changelog view with markdown section headers,
+ * clean bullet points, and comfortable typography.
+ */
+@Composable
+fun ChangelogText(
+    notes: String,
+    modifier: Modifier = Modifier,
+) {
+    val scrollState = rememberScrollState()
+    val isMiuix = isMiuixStyle
+    val textColor = if (isMiuix) MiuixTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface
+    val subtextColor = if (isMiuix) MiuixTheme.colorScheme.onSurfaceVariantSummary else MaterialTheme.colorScheme.onSurfaceVariant
+    val accentColor = if (isMiuix) MiuixTheme.colorScheme.primary else MaterialTheme.colorScheme.primary
+
+    if (notes.isBlank()) {
+        Text(
+            text = "No changelog details provided.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = subtextColor,
+            modifier = modifier.padding(vertical = 12.dp),
+        )
+        return
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(max = 420.dp)
+            .verticalScroll(scrollState)
+            .padding(vertical = 4.dp),
+    ) {
+        val lines = notes.lines()
+        for (line in lines) {
+            val trimmed = line.trim()
+            when {
+                trimmed.startsWith("### ") || trimmed.startsWith("## ") || trimmed.startsWith("# ") -> {
+                    val headerText = trimmed.removePrefix("### ").removePrefix("## ").removePrefix("# ")
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = headerText,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
+                trimmed.startsWith("- ") || trimmed.startsWith("* ") -> {
+                    val bulletText = trimmed.substring(2).trim()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 3.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
+                        Text(
+                            text = "•",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = accentColor,
+                            modifier = Modifier.padding(start = 2.dp, end = 8.dp),
+                        )
+                        Text(
+                            text = bulletText,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            color = textColor,
+                        )
+                    }
+                }
+                trimmed.isEmpty() -> {
+                    Spacer(Modifier.height(6.dp))
+                }
+                else -> {
+                    Text(
+                        text = trimmed,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        color = textColor,
+                        modifier = Modifier.padding(vertical = 2.dp),
+                    )
                 }
             }
         }

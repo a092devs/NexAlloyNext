@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.18
+
+- Search Bar Alignment: Redesigned `ThemedSearchField` with a centered capsule layout ensuring the search glyph and placeholder/input text share the exact same vertical center line without offset in both MIUIX and Material 3.
+- Floating Navigation Bar: Eliminated the sliding animation across navigation tabs in favor of instant, smooth in-place selection pill transitions.
+- Module Active Status Card: Redesigned the home screen status card with a lush emerald green container, fine accent border, circular checkmark badge, and active status chip when the LSPosed module is loaded.
+- Compact Card Action Buttons: Replaced oversized patch source action buttons on `SourceCard` with sleek, proportional compact pill buttons (`ThemedCompactFilledButton` and `ThemedCompactTonalButton`).
+- Changelog Readability: Implemented `ChangelogText` with clean markdown heading typography, accent bullet lists, and scrollable container for release notes dialogs.
+
 ## 3.1.17
 
 - Companion Patch Catalog Alignment:

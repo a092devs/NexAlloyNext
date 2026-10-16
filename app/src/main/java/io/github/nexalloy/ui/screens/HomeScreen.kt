@@ -1,21 +1,29 @@
 package io.github.nexalloy.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -38,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -45,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import io.github.nexalloy.core.R
@@ -339,73 +349,124 @@ fun HomeContent(
             confirmText = stringResource(android.R.string.ok),
             onConfirm = { changelog = null },
         ) {
-            Text(notes.ifBlank { "-" })
+            ChangelogText(notes)
         }
     }
 }
+
+private data class StatusPalette(
+    val bg: Color,
+    val border: Color,
+    val badge: Color,
+    val icon: Color,
+    val title: Color,
+    val desc: Color,
+)
 
 @Composable
 private fun StatusCard(active: Boolean, title: String, text: String) {
-    val isMiuix = isMiuixStyle
-    val baseContainer = if (active) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.errorContainer
-    }
-    val containerColor = if (isMiuix) baseContainer.copy(alpha = 0.85f) else baseContainer
-    val border = if (isMiuix) {
-        BorderStroke(
-            1.dp,
-            if (active) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-            else MaterialTheme.colorScheme.error.copy(alpha = 0.4f),
-        )
-    } else null
+    val isDark = isSystemInDarkTheme()
+    val shape = RoundedCornerShape(18.dp)
 
-    if (isMiuix) {
-        MiuixCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-        ) {
-            StatusCardContent(active = active, title = title, text = text)
-        }
-    } else {
-        Card(
-            colors = CardDefaults.cardColors(containerColor = containerColor),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = nexAlloyCardShape(),
-            border = border,
-        ) {
-            StatusCardContent(active = active, title = title, text = text)
-        }
-    }
-}
-
-@Composable
-private fun StatusCardContent(active: Boolean, title: String, text: String) {
-    val icons = appIcons()
-    Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            if (active) icons.check else icons.warning,
-            contentDescription = null,
-            tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(32.dp),
-        )
-        Spacer(Modifier.width(16.dp))
-        Column {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+    val palette = if (active) {
+        if (isDark) {
+            StatusPalette(
+                bg = Color(0xFF0D3320),
+                border = Color(0xFF1B6B40),
+                badge = Color(0xFF165331),
+                icon = Color(0xFF4CAF50),
+                title = Color(0xFFE8F5E9),
+                desc = Color(0xFFA5D6A7),
             )
-            if (text.isNotEmpty()) {
-                Text(
-                    text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        } else {
+            StatusPalette(
+                bg = Color(0xFFE8F5E9),
+                border = Color(0xFFA5D6A7),
+                badge = Color(0xFFC8E6C9),
+                icon = Color(0xFF2E7D32),
+                title = Color(0xFF1B5E20),
+                desc = Color(0xFF2E7D32),
+            )
+        }
+    } else {
+        if (isDark) {
+            StatusPalette(
+                bg = Color(0xFF381414),
+                border = Color(0xFF6B2424),
+                badge = Color(0xFF521C1C),
+                icon = Color(0xFFEF5350),
+                title = Color(0xFFFFEBEE),
+                desc = Color(0xFFFFCDD2),
+            )
+        } else {
+            StatusPalette(
+                bg = Color(0xFFFFEBEE),
+                border = Color(0xFFFFCDD2),
+                badge = Color(0xFFFFCDD2),
+                icon = Color(0xFFC62828),
+                title = Color(0xFFB71C1C),
+                desc = Color(0xFFC62828),
+            )
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(shape)
+            .background(palette.bg)
+            .border(1.dp, palette.border, shape)
+            .padding(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(palette.badge),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = if (active) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = palette.icon,
+                    modifier = Modifier.size(26.dp),
                 )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = palette.title,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(palette.icon.copy(alpha = 0.2f))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = if (active) "Active" else "Inactive",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = palette.icon,
+                        )
+                    }
+                }
+                if (text.isNotEmpty()) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.desc,
+                        maxLines = 2,
+                    )
+                }
             }
         }
     }

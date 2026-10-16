@@ -327,7 +327,7 @@ fun PatchesContent(
             confirmText = stringResource(android.R.string.ok),
             onConfirm = { changelog = null },
         ) {
-            Text(notes.ifBlank { "-" })
+            ChangelogText(notes)
         }
     }
 
@@ -514,12 +514,20 @@ private fun SourceCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                ThemedIconButton(onClick = onRefresh, enabled = !busy) {
-                    Icon(icons.refresh, contentDescription = stringResource(R.string.action_refresh))
+                ThemedIconButton(
+                    onClick = onRefresh,
+                    enabled = !busy,
+                    modifier = Modifier.size(34.dp),
+                ) {
+                    Icon(
+                        imageVector = icons.refresh,
+                        contentDescription = stringResource(R.string.action_refresh),
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
 
                 if (latest != null && latest.changelog.isNotBlank()) {
-                    ThemedTextButton(
+                    ThemedCompactTonalButton(
                         label = stringResource(R.string.action_changelog),
                         onClick = { onChangelog(latest.version to latest.changelog) },
                     )
@@ -527,7 +535,7 @@ private fun SourceCard(
                 if (busy) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp))
                 } else if (source.enabled) {
-                    ThemedFilledButton(
+                    ThemedCompactFilledButton(
                         label = stringResource(
                             when {
                                 source.installedVersion == null -> R.string.action_install
