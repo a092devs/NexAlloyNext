@@ -71,8 +71,7 @@ The official companion patch repository is maintained at:
 
 Bundles provided include:
 - `nexalloy`: YouTube, YouTube Music, Reddit, and Google Photos.
-- `2eno`: Spotify ad muting/UI customization and Instagram Stealth Follow.
-- `a092devs`: community-ported patches for Discord, Facebook, Gboard (PixelBoard rounded keycaps & AI flag ports), Instagram (HushGram & Piko ports), LinkedIn, MiXplorer, Proton VPN, Reddit, and X (Twitter).
+- `a092devs`: community-ported patches for Discord, Facebook, Gboard (PixelBoard rounded keycaps & AI flag ports), Instagram (HushGram & Piko ports), LinkedIn, MiXplorer, Proton VPN, Reddit, Spotify (ad muting/UI customization), and X (Twitter).
 
 ---
 

@@ -158,7 +158,7 @@ class MainHook : XposedModule() {
         "app.revanced.integrations.shared.Utils",
         "app.revanced.integrations.shared.utils.Utils",
         "app.revanced.extension.shared.Utils",
-        // Patched with 2eno Patches.
+        // Patched with Spotify patches.
         "app.twoeno.extension.shared.Logger",
     ).any { runCatching { param.classLoader.loadClass(it) }.isSuccess }
 }

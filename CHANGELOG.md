@@ -5,6 +5,10 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.29
+
+- Spotify Bundle Mapping: mapped Spotify to `a092devs Patches` in the supported app catalog.
+
 ## 3.1.28
 
 - Installed Bundles: a bundle's card now lists only the apps present on this device, so apps you have uninstalled (for example Spotify after uninstalling it) stop appearing in the app chips; a bundle whose apps are all missing says so in place of the chips.

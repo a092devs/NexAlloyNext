@@ -183,7 +183,7 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.spotify.music",
             appName = "Spotify",
-            defaultBundleName = "2eno Patches",
+            defaultBundleName = "a092devs Patches",
             appIconColor = 0x1ED760,
         ),
         KnownSupportedApp(

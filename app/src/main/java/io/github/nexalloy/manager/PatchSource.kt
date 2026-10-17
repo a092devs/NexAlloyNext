@@ -107,7 +107,7 @@ data class PatchSource(
             provenance = provenance,
         )
 
-        /** The unified NexAlloy Patches bundle (NexAlloy, 2eno, Piko). */
+        /** The unified NexAlloy Patches repository (NexAlloy, a092devs). */
         val default = PatchSource(
             id = "default",
             name = "NexAlloy Unified Patches",
