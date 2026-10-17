@@ -207,6 +207,14 @@ object AppDiscovery {
     )
 
     /**
+     * The display names of [apps] (package name to display name) whose packages are present on
+     * this device, sorted for display. Cards describing a bundle use this, so a bundle stops
+     * naming apps that are not installed; [isInstalled] is a parameter so the rule is testable.
+     */
+    fun installedAppNames(apps: Map<String, String>, isInstalled: (String) -> Boolean): List<String> =
+        apps.filterKeys { isInstalled(it) }.values.distinct().sortedBy { it.lowercase() }
+
+    /**
      * Discovers all target applications from enabled bundles across enabled sources,
      * combining them with live package information and the supported app catalog.
      */

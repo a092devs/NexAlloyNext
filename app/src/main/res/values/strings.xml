@@ -41,6 +41,7 @@
     <string name="patch_sources_summary">Patch sources provide patch bundles, like the patch sources of Morphe. A source is a GitHub repository whose releases contain .nxb bundles, or the URL of a bundle JSON file.</string>
     <string name="sources_category">Sources</string>
     <string name="installed_bundles_category">Installed bundles</string>
+    <string name="bundle_no_installed_apps">No supported apps installed on this device</string>
     <string name="add_source_title">Add source</string>
     <string name="add_source_warning">Patch bundles run code inside the apps they patch. Only add sources you trust.</string>
     <string name="source_name_hint">Name (optional)</string>

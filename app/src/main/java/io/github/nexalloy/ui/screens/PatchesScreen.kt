@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.nexalloy.core.InstalledBundle
 import io.github.nexalloy.core.R
+import io.github.nexalloy.core.discovery.AppDiscovery
 import io.github.nexalloy.manager.PatchSource
 import io.github.nexalloy.manager.SourceProvenance
 import io.github.nexalloy.ui.ManagerState
@@ -648,20 +650,31 @@ private fun BundleCard(
 
             Spacer(Modifier.height(8.dp))
 
-            // Targeted apps chips
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                bundle.apps.values.sortedBy { it.lowercase() }.forEach { appName ->
-                    Text(
-                        text = appName,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier
-                            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
-                    )
+            // Targeted apps chips: only the apps present on this device, so a bundle stops
+            // naming apps the user has uninstalled.
+            val context = LocalContext.current
+            val appNames = AppDiscovery.installedAppNames(bundle.apps) { isInstalled(context, it) }
+            if (appNames.isEmpty()) {
+                Text(
+                    stringResource(R.string.bundle_no_installed_apps),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    appNames.forEach { appName ->
+                        Text(
+                            text = appName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                        )
+                    }
                 }
             }
 
