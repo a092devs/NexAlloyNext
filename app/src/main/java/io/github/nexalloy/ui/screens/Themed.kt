@@ -73,8 +73,18 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -784,8 +794,9 @@ fun ThemedRadioDialog(
 }
 
 /**
- * Clean, readable, scrollable changelog view with markdown section headers,
- * clean bullet points, and comfortable typography.
+ * Clean, readable, scrollable changelog view with markdown section headers, clean bullet points,
+ * comfortable typography, and inline markdown (code spans, emphasis, strikethrough and links)
+ * rendered through [changelogAnnotatedString] instead of shown as raw markers.
  */
 @Composable
 fun ChangelogText(
@@ -797,6 +808,7 @@ fun ChangelogText(
     val textColor = if (isMiuix) MiuixTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface
     val subtextColor = if (isMiuix) MiuixTheme.colorScheme.onSurfaceVariantSummary else MaterialTheme.colorScheme.onSurfaceVariant
     val accentColor = if (isMiuix) MiuixTheme.colorScheme.primary else MaterialTheme.colorScheme.primary
+    val codeBackground = accentColor.copy(alpha = 0.14f)
 
     if (notes.isBlank()) {
         Text(
@@ -823,7 +835,7 @@ fun ChangelogText(
                     val headerText = trimmed.removePrefix("### ").removePrefix("## ").removePrefix("# ")
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        text = headerText,
+                        text = changelogAnnotatedString(headerText, codeBackground, accentColor),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = accentColor,
@@ -846,7 +858,7 @@ fun ChangelogText(
                             modifier = Modifier.padding(start = 2.dp, end = 8.dp),
                         )
                         Text(
-                            text = bulletText,
+                            text = changelogAnnotatedString(bulletText, codeBackground, accentColor),
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
                             color = textColor,
@@ -858,7 +870,7 @@ fun ChangelogText(
                 }
                 else -> {
                     Text(
-                        text = trimmed,
+                        text = changelogAnnotatedString(trimmed, codeBackground, accentColor),
                         fontSize = 14.sp,
                         lineHeight = 20.sp,
                         color = textColor,
@@ -866,6 +878,40 @@ fun ChangelogText(
                     )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Maps the inline markdown of one changelog line onto an [AnnotatedString]: `code` runs in a
+ * monospace face with a tinted background, **bold**, *italic* and ~~strikethrough~~ merge with
+ * the body text, and links (markdown or bare URLs) become tappable.
+ */
+private fun changelogAnnotatedString(
+    text: String,
+    codeBackground: Color,
+    linkColor: Color,
+): AnnotatedString = buildAnnotatedString {
+    for (span in parseMarkdownSpans(text)) {
+        if (span.url != null) {
+            withLink(
+                LinkAnnotation.Url(
+                    url = span.url,
+                    styles = TextLinkStyles(
+                        style = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline),
+                    ),
+                ),
+            ) { append(span.text) }
+        } else {
+            withStyle(
+                SpanStyle(
+                    fontFamily = if (span.code) FontFamily.Monospace else null,
+                    background = if (span.code) codeBackground else Color.Unspecified,
+                    fontWeight = if (span.bold) FontWeight.Bold else null,
+                    fontStyle = if (span.italic) FontStyle.Italic else null,
+                    textDecoration = if (span.strikethrough) TextDecoration.LineThrough else null,
+                ),
+            ) { append(span.text) }
         }
     }
 }

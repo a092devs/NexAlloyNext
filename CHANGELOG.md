@@ -5,6 +5,10 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.26
+
+- Changelog Rendering: release notes and bundle changelogs in the dialogs now render their inline markdown instead of showing the raw markers — `code` runs as a monospace chip, **bold**, *italic* and ~~strikethrough~~ merge with the body text, and markdown links plus bare URLs become tappable — so backticks around package, bundle and file names no longer leak into the dialog.
+
 ## 3.1.25
 
 - X Bundle Mapping: the supported-app catalog now points X (`com.twitter.android`) at the `a092devs Patches` bundle and its `12.35.0-prod.01` target instead of the removed `Piko Patches` bundle (`12.19.1-release.0`); the README's bundled-app list documents Instagram and X under `a092devs`.
