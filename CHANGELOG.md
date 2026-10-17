@@ -5,6 +5,10 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.27
+
+- Changelog Wrapping: soft-wrapped changelog lines are now merged back into their markdown block the way GitHub renders them, so a bullet or paragraph whose text spans several source lines shows as one wrapped block instead of continuation lines jumping to the left margin.
+
 ## 3.1.26
 
 - Changelog Rendering: release notes and bundle changelogs in the dialogs now render their inline markdown instead of showing the raw markers — `code` runs as a monospace chip, **bold**, *italic* and ~~strikethrough~~ merge with the body text, and markdown links plus bare URLs become tappable — so backticks around package, bundle and file names no longer leak into the dialog.

@@ -13,6 +13,13 @@ internal data class MarkdownSpan(
     val url: String? = null,
 )
 
+/** A logical markdown block: a header, a bullet item or a paragraph, with soft-wrapped lines joined. */
+internal data class ChangelogBlock(
+    val text: String,
+    val header: Boolean = false,
+    val bullet: Boolean = false,
+)
+
 /**
  * Matches the inline markdown GitHub release notes use, in priority order: `code` spans,
  * [markdown](links), **bold**, __bold__, ~~strikethrough~~, *italic*, _italic_ and bare http(s)
@@ -29,6 +36,36 @@ private val INLINE_MARKDOWN = Regex(
         "|(?<![\\w_])_(?!\\s)([^_\\n]+?)(?<=\\S)_(?![\\w_])" +
         "|https?://[^\\s<>\\[\\]()]+",
 )
+
+/**
+ * Groups the changelog into logical blocks: consecutive source lines in the same paragraph or
+ * bullet item are joined with a space the way GitHub soft-wraps them, blank lines stay as block
+ * separators, and headers are never merged with the line below.
+ */
+internal fun changelogBlocks(notes: String): List<ChangelogBlock> {
+    val blocks = mutableListOf<ChangelogBlock>()
+    for (rawLine in notes.lines()) {
+        val trimmed = rawLine.trim()
+        when {
+            trimmed.isEmpty() -> blocks += ChangelogBlock("")
+            trimmed.startsWith("### ") || trimmed.startsWith("## ") || trimmed.startsWith("# ") -> {
+                val headerText = trimmed.removePrefix("### ").removePrefix("## ").removePrefix("# ")
+                blocks += ChangelogBlock(headerText, header = true)
+            }
+            trimmed.startsWith("- ") || trimmed.startsWith("* ") ->
+                blocks += ChangelogBlock(trimmed.substring(2).trim(), bullet = true)
+            else -> {
+                val previous = blocks.lastOrNull()
+                if (previous != null && !previous.header && previous.text.isNotEmpty()) {
+                    blocks[blocks.lastIndex] = previous.copy(text = "${previous.text} $trimmed")
+                } else {
+                    blocks += ChangelogBlock(trimmed)
+                }
+            }
+        }
+    }
+    return blocks
+}
 
 /**
  * Splits one line of inline markdown into styled runs. Styled content is parsed recursively so a

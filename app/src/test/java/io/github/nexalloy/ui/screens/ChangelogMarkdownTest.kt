@@ -92,4 +92,47 @@ class ChangelogMarkdownTest {
             parseMarkdownSpans("see https://example.com/x."),
         )
     }
+
+    @Test
+    fun bulletAbsorbsSoftWrappedContinuationLines() {
+        val notes = """
+            - The `piko` bundle is removed: it carried only the X hooks
+              for `12.19.1-release.0`, which no longer match.
+            - Docs updated.
+        """.trimIndent()
+        assertEquals(
+            listOf(
+                ChangelogBlock(
+                    "The `piko` bundle is removed: it carried only the X hooks for `12.19.1-release.0`, which no longer match.",
+                    bullet = true,
+                ),
+                ChangelogBlock("Docs updated.", bullet = true),
+            ),
+            changelogBlocks(notes),
+        )
+    }
+
+    @Test
+    fun blankLinesKeepBlocksSeparate() {
+        assertEquals(
+            listOf(
+                ChangelogBlock("first paragraph wraps"),
+                ChangelogBlock(""),
+                ChangelogBlock("second paragraph"),
+            ),
+            changelogBlocks("first paragraph\nwraps\n\nsecond paragraph"),
+        )
+    }
+
+    @Test
+    fun headersNeverMergeWithFollowingLines() {
+        assertEquals(
+            listOf(
+                ChangelogBlock("1.0.0", header = true),
+                ChangelogBlock(""),
+                ChangelogBlock("item", bullet = true),
+            ),
+            changelogBlocks("## 1.0.0\n\n- item"),
+        )
+    }
 }

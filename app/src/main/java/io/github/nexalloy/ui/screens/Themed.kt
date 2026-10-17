@@ -827,23 +827,23 @@ fun ChangelogText(
             .verticalScroll(scrollState)
             .padding(vertical = 4.dp),
     ) {
-        val lines = notes.lines()
-        for (line in lines) {
-            val trimmed = line.trim()
+        val blocks = remember(notes) { changelogBlocks(notes) }
+        for (block in blocks) {
             when {
-                trimmed.startsWith("### ") || trimmed.startsWith("## ") || trimmed.startsWith("# ") -> {
-                    val headerText = trimmed.removePrefix("### ").removePrefix("## ").removePrefix("# ")
+                block.text.isEmpty() -> {
+                    Spacer(Modifier.height(6.dp))
+                }
+                block.header -> {
                     Spacer(Modifier.height(10.dp))
                     Text(
-                        text = changelogAnnotatedString(headerText, codeBackground, accentColor),
+                        text = changelogAnnotatedString(block.text, codeBackground, accentColor),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = accentColor,
                     )
                     Spacer(Modifier.height(4.dp))
                 }
-                trimmed.startsWith("- ") || trimmed.startsWith("* ") -> {
-                    val bulletText = trimmed.substring(2).trim()
+                block.bullet -> {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -858,19 +858,16 @@ fun ChangelogText(
                             modifier = Modifier.padding(start = 2.dp, end = 8.dp),
                         )
                         Text(
-                            text = changelogAnnotatedString(bulletText, codeBackground, accentColor),
+                            text = changelogAnnotatedString(block.text, codeBackground, accentColor),
                             fontSize = 14.sp,
                             lineHeight = 20.sp,
                             color = textColor,
                         )
                     }
                 }
-                trimmed.isEmpty() -> {
-                    Spacer(Modifier.height(6.dp))
-                }
                 else -> {
                     Text(
-                        text = changelogAnnotatedString(trimmed, codeBackground, accentColor),
+                        text = changelogAnnotatedString(block.text, codeBackground, accentColor),
                         fontSize = 14.sp,
                         lineHeight = 20.sp,
                         color = textColor,
