@@ -15,6 +15,12 @@ import org.luckypray.dexkit.DexKitCacheBridge
 import org.luckypray.dexkit.annotations.DexKitExperimentalApi
 import kotlin.system.measureTimeMillis
 
+/**
+ * Cache key of the last failing-patch set; see [PatchSession.finish]. Distinct from the
+ * `nexalloy:id:` keys, which hold the cache validity token of one bundle.
+ */
+private const val FAILURE_KEY = "nexalloy:failed"
+
 @Suppress("UNCHECKED_CAST")
 class SharedPrefCache(app: Application) : DexKitCacheBridge.Cache {
     val pref = app.getSharedPreferences("nexalloy_dexkit", MODE_PRIVATE)!!
@@ -68,7 +74,7 @@ class PatchSession(
     private val xposed: XposedInterface,
     /** Identifies the NexAlloy build; part of every cache key. */
     private val coreVersion: String,
-    /** Disables the fingerprint cache. */
+    /** Enables the debug-only success log. */
     private val debug: Boolean,
 ) {
     private val cache = SharedPrefCache(app)
@@ -96,7 +102,7 @@ class PatchSession(
             }
             executor.failedPatches.mapTo(failedPatches) { "${it.name} (${bundle.name})" }
         }
-        PatcherLog.info { "${lpparam.packageName}: applied ${bundle.id} in ${time}ms" }
+        PatcherLog.state { "${lpparam.packageName}: applied ${bundle.id} in ${time}ms" }
     }
 
     /** Records a bundle that could not be loaded at all. */
@@ -107,13 +113,26 @@ class PatchSession(
     }
 
     fun finish() {
-        cache.saveCache()
-        if (failedPatches.isNotEmpty()) {
-            XposedBridge.log("${lpparam.packageName} version: $appVersion")
-            showToast("Error while applying the following patches:\n${failedPatches.joinToString()}")
-        } else if (debug) {
-            XposedBridge.log("${lpparam.packageName} version: $appVersion: patches applied successfully")
+        val signature = failedPatches.joinToString()
+        if (signature.isNotEmpty()) {
+            PatcherLog.state { "${lpparam.packageName} version: $appVersion: failing patches: $signature" }
+            // A deterministic miss would toast on every start of the affected app until the system
+            // blocks the app's toasts outright (and eats the message); only a change in the failing
+            // set is news, the log line above carries the rest.
+            val previous = cache.getString(FAILURE_KEY, null)
+            if (signature != previous) {
+                cache.putString(FAILURE_KEY, signature)
+                showToast("Error while applying the following patches:\n$signature")
+            }
+        } else {
+            if (cache.getString(FAILURE_KEY, null)?.isNotEmpty() == true) {
+                cache.putString(FAILURE_KEY, "")
+            }
+            if (debug) {
+                XposedBridge.log("${lpparam.packageName} version: $appVersion: patches applied successfully")
+            }
         }
+        cache.saveCache()
     }
 
     private fun loadCacheIfValid(bundle: BundleInfo) {
@@ -121,9 +140,9 @@ class PatchSession(
         val idKey = "nexalloy:id:${bundle.id}"
         val id = "${packageInfo.lastUpdateTime}-$coreVersion-${bundle.version}"
         val cachedId = cache.getString(idKey, null)
-        val isCached = cachedId == id && !debug
+        val isCached = cachedId == id
 
-        PatcherLog.info { "${bundle.id} cache ID: $id, cached ID: $cachedId, using cache: $isCached" }
+        PatcherLog.state { "${bundle.id} cache ID: $id, cached ID: $cachedId, using cache: $isCached" }
 
         if (!isCached) {
             DexKitCacheBridge.clearCache(bundle.id)

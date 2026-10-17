@@ -93,6 +93,14 @@ class DependedHookFailedException(
 ) : Exception("Depended hook $subHookName failed.", exception)
 
 /**
+ * Raised when a finder finds no anchor or the anchor's lookup fails. Thrown instead of letting a
+ * null reach DexKit, whose cache layer does not accept one (it fails with a bare
+ * NullPointerException that names neither the fingerprint nor the app).
+ */
+class FingerprintNotFoundException(key: String, cause: Throwable? = null) :
+    Exception("Fingerprint $key not found", cause)
+
+/**
  * Applies the patches of one [PatchBundle] to the hooked app.
  *
  * Patches run as extension functions of this class, so everything here is available inside `patch { }`.
@@ -127,7 +135,10 @@ class PatchExecutor(
             }
 
             runCatching { hook.run(this) }.onFailure { err ->
-                XposedBridge.log(err)
+                XposedBridge.log("${bundle.id}: patch '${hook.name}' failed")
+                PatcherLog.state(err) {
+                    "${bundle.id}: patch '${hook.name}' failed: ${err.message ?: err.javaClass.simpleName}"
+                }
                 failedPatches.add(hook)
             }.onSuccess {
                 appliedPatches.add(hook)
@@ -227,14 +238,16 @@ class PatchExecutor(
         key: String,
         crossinline funcFunc: DexKitBridge.() -> T,
         crossinline serializer: (T) -> String
-    ): DexKitBridge.() -> T? {
+    ): DexKitBridge.() -> T {
         return {
-            try {
-                funcFunc().also { PatcherLog.info { "$key Matches: ${serializer(it)}" } }
+            val result = try {
+                funcFunc()
             } catch (e: Exception) {
                 PatcherLog.info(e) { "Fingerprint $key Not Found" }
-                null
+                throw FingerprintNotFoundException(key, e)
             }
+            PatcherLog.info { "$key Matches: ${serializer(result)}" }
+            result
         }
     }
 

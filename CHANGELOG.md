@@ -5,6 +5,40 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.1.25
+
+- X Bundle Mapping: the supported-app catalog now points X (`com.twitter.android`) at the `a092devs Patches` bundle and its `12.35.0-prod.01` target instead of the removed `Piko Patches` bundle (`12.19.1-release.0`); the README's bundled-app list documents Instagram and X under `a092devs`.
+
+## 3.1.24
+
+- Compact Floating Bar Setting: the Miuix-only floating navigation toggle is now labelled "Floating bar" with a single-line description ("Floats over the content with Miuix blur; off by default.") instead of the oversized title and two-line summary.
+
+## 3.1.23
+
+- Settings Cleanup: the Diagnostics entry and its copyable system/bundle dump were removed from Settings, and Clear DexKit cache moved under General. The framework name and version are no longer surfaced anywhere in the UI.
+- Shorter Tagline: the description at the bottom of Settings now reads "NexAlloyNext applies patch bundles from patch sources. Only add sources you trust."
+
+## 3.1.22
+
+- Status Card App Version: the home screen's "Module is active" card now shows the running NexAlloyNext version instead of the Xposed framework name and version (like "Vector 1.9.4"), so screenshots and bug reports name the module build that is actually in use; the framework is still listed in Diagnostics.
+
+## 3.1.21
+
+- Installed-Only App List: the home catalog now lists only applications that are actually installed on the device, so bundle-supported apps that are not installed — for example YouTube Music while the nexalloy bundle is imported — no longer appear under "Supported Apps (Not Installed)". The Not Installed filter chip and the unused catalog helpers behind it were removed as well; the app catalog itself is unchanged for per-app screens and diagnostics.
+
+## 3.1.20
+
+- Patcher Resilience: a patch or bundle that throws while applying no longer aborts the rest of the session, and the fingerprint cache is now persisted even then; previously an escaping exception skipped the cache write, so every following start of the affected app re-ran every fingerprint match and showed the initialization popup again.
+- Readable Patch Failures: a failed patch is now logged with its bundle and patch name plus its exception on release builds, and the "Error while applying the following patches" toast is only shown when the set of failing patches changes instead of on every start of the affected app (which previously tripped the system toast quota and got the message discarded entirely).
+- Missing-Anchors Reporting: a fingerprint that finds no anchor now raises a named FingerprintNotFoundException instead of surfacing as an anonymous NullPointerException from DexKit's cache layer.
+- Check for Updates Feedback: tapping Check for updates now shows an inline "Checking for updates…" state right away and always reports the outcome in a snackbar — including "a new NexAlloy version is available" and "patch updates are available" — where the Settings screen previously stayed silent whenever something was found.
+- Release Diagnostics: the per-bundle cache decision ("using cache: true/false"), the applied summary and failures are logged on release builds too, so a device can be audited with logcat alone.
+
+## 3.1.19
+
+- Patcher Cache: fingerprint caches are now reused by debug builds as well, so the companion module stops re-running every fingerprint match each time a patched app starts; the cache key already covers the app, the NexAlloy build and the bundle versions, and Clear patcher cache stays as the manual escape hatch.
+- Miuix Update Feedback: the Miuix presentation now surfaces one-off messages, like the result of Check for updates, source refreshes and install failures, in a swipe-dismissible Miuix snackbar anchored above the navigation bar; previously only the Material presentation had a message surface, which made Check for updates look like it did nothing.
+
 ## 3.1.18
 
 - Search Bar Alignment: Redesigned `ThemedSearchField` with a centered capsule layout ensuring the search glyph and placeholder/input text share the exact same vertical center line without offset in both MIUIX and Material 3.

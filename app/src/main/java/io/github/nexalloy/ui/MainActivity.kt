@@ -92,6 +92,8 @@ import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
 import top.yukonga.miuix.kmp.basic.FloatingToolbarDefaults
 import top.yukonga.miuix.kmp.basic.NavigationBar as MiuixNavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem as MiuixNavigationBarItem
+import top.yukonga.miuix.kmp.basic.SnackbarHost as MiuixSnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState as MiuixSnackbarHostState
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
 import top.yukonga.miuix.kmp.blur.highlight.Highlight
@@ -198,14 +200,10 @@ private fun ManagerApp(
     onDestinationHandled: () -> Unit,
 ) {
     val navController = rememberNavController()
-    val snackbar = remember { SnackbarHostState() }
     val backStack by navController.currentBackStackEntryAsState()
     val route = backStack?.destination?.route
     val isMiuix = isMiuixStyle
 
-    LaunchedEffect(Unit) {
-        viewModel.messages.collect { snackbar.showSnackbar(it) }
-    }
     LaunchedEffect(requestedDestination) {
         if (requestedDestination != null) {
             navController.navigateTopLevel(requestedDestination)
@@ -226,7 +224,6 @@ private fun ManagerApp(
             navController = navController,
             viewModel = viewModel,
             route = route,
-            snackbar = snackbar,
         )
     }
 }
@@ -239,9 +236,13 @@ private fun Material3ManagerApp(
     navController: NavHostController,
     viewModel: ManagerViewModel,
     route: String?,
-    snackbar: SnackbarHostState,
 ) {
     val isTopLevel = topLevel.any { it.route == route }
+    val snackbar = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { snackbar.showSnackbar(it) }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -303,6 +304,11 @@ private fun MiuixManagerApp(
 ) {
     val isTopLevel = topLevel.any { it.route == route }
 
+    val snackbar = remember { MiuixSnackbarHostState() }
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { snackbar.showSnackbar(it) }
+    }
+
     // The window background follows the *system* night mode while the app can force its own
     // light/dark preference, so the Miuix presentation paints the page itself: the same
     // charcoal/off-white tones the window otherwise provides (see values/themes.xml and
@@ -319,9 +325,9 @@ private fun MiuixManagerApp(
             .background(MiuixTheme.colorScheme.background),
     ) {
         if (floatingNavigation) {
-            MiuixFloatingNavigationApp(navController, viewModel, isTopLevel)
+            MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
         } else {
-            MiuixStandardNavigationApp(navController, viewModel, route, isTopLevel)
+            MiuixStandardNavigationApp(navController, viewModel, route, isTopLevel, snackbar)
         }
     }
 }
@@ -361,6 +367,7 @@ private fun MiuixStandardNavigationApp(
     viewModel: ManagerViewModel,
     route: String?,
     isTopLevel: Boolean,
+    snackbar: MiuixSnackbarHostState,
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
@@ -372,6 +379,10 @@ private fun MiuixStandardNavigationApp(
                 navController = navController,
                 viewModel = viewModel,
                 contentPadding = PaddingValues(bottom = 16.dp),
+            )
+            MiuixSnackbarHost(
+                state = snackbar,
+                modifier = Modifier.fillMaxSize(),
             )
         }
         if (isTopLevel) {
@@ -398,6 +409,7 @@ private fun MiuixFloatingNavigationApp(
     navController: NavHostController,
     viewModel: ManagerViewModel,
     isTopLevel: Boolean,
+    snackbar: MiuixSnackbarHostState,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val systemDark = isSystemInDarkTheme()
@@ -437,6 +449,12 @@ private fun MiuixFloatingNavigationApp(
                 navController = navController,
                 viewModel = viewModel,
                 contentPadding = PaddingValues(bottom = bottomPadding),
+            )
+            MiuixSnackbarHost(
+                state = snackbar,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = bottomPadding),
             )
         }
 

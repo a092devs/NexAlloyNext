@@ -2,16 +2,12 @@ package io.github.nexalloy.ui.screens
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -30,11 +26,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import io.github.nexalloy.core.BuildConfig
 import io.github.nexalloy.core.R
@@ -63,7 +56,6 @@ private val licenses = listOf(
 @Composable
 fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
     val settings = viewModel.settings
     val state by viewModel.state.collectAsState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -75,7 +67,6 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     var showThemeDialog by remember { mutableStateOf(false) }
     var showThemeStyleDialog by remember { mutableStateOf(false) }
     var showColorSchemeDialog by remember { mutableStateOf(false) }
-    var showDiagnosticsDialog by remember { mutableStateOf(false) }
     var showLicenses by remember { mutableStateOf(false) }
 
     val transparent = ListItemDefaults.colors(containerColor = Color.Transparent)
@@ -130,7 +121,8 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         )
                         ArrowPreference(
                             title = stringResource(R.string.check_for_update_title),
-                            onClick = { viewModel.checkUpdates(userInitiated = true) },
+                            summary = if (state.checkingUpdates) stringResource(R.string.source_checking) else null,
+                            onClick = { if (!state.checkingUpdates) viewModel.checkUpdates(userInitiated = true) },
                         )
                     }
                 }
@@ -173,21 +165,10 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             checked = iconHidden,
                             onCheckedChange = { iconHidden = it; viewModel.launcherIconHidden = it },
                         )
-                    }
-                }
-
-                item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.diagnostics_title)) }
-                item {
-                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
                         ArrowPreference(
                             title = stringResource(R.string.action_clear_cache),
                             summary = stringResource(R.string.action_clear_cache_summary),
                             onClick = { viewModel.clearDexKitCache() },
-                        )
-                        ArrowPreference(
-                            title = stringResource(R.string.diagnostics_title),
-                            summary = stringResource(R.string.diagnostics_summary),
-                            onClick = { showDiagnosticsDialog = true },
                         )
                     }
                 }
@@ -259,8 +240,13 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                 item {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.check_for_update_title)) },
+                        supportingContent = if (state.checkingUpdates) {
+                            { Text(stringResource(R.string.source_checking)) }
+                        } else null,
                         colors = transparent,
-                        modifier = Modifier.clickable { viewModel.checkUpdates(userInitiated = true) },
+                        modifier = Modifier.clickable {
+                            if (!state.checkingUpdates) viewModel.checkUpdates(userInitiated = true)
+                        },
                     )
                 }
 
@@ -299,22 +285,12 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                         colors = transparent,
                     )
                 }
-
-                item { SectionHeader(stringResource(R.string.diagnostics_title)) }
                 item {
                     ListItem(
                         headlineContent = { Text(stringResource(R.string.action_clear_cache)) },
                         supportingContent = { Text(stringResource(R.string.action_clear_cache_summary)) },
                         colors = transparent,
                         modifier = Modifier.clickable { viewModel.clearDexKitCache() },
-                    )
-                }
-                item {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.diagnostics_title)) },
-                        supportingContent = { Text(stringResource(R.string.diagnostics_summary)) },
-                        colors = transparent,
-                        modifier = Modifier.clickable { showDiagnosticsDialog = true },
                     )
                 }
 
@@ -403,34 +379,6 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             onSelect = { viewModel.setColorScheme(it) },
             onDismissRequest = { showColorSchemeDialog = false },
         )
-    }
-
-    if (showDiagnosticsDialog) {
-        val diagnosticsText = remember(showDiagnosticsDialog) { viewModel.exportDiagnostics() }
-        ThemedDialog(
-            show = true,
-            title = stringResource(R.string.diagnostics_title),
-            onDismissRequest = { showDiagnosticsDialog = false },
-            confirmText = stringResource(R.string.action_copy_diagnostics),
-            onConfirm = {
-                clipboardManager.setText(AnnotatedString(diagnosticsText))
-                viewModel.message(R.string.diagnostics_copied)
-            },
-            dismissText = stringResource(android.R.string.ok),
-            onDismiss = { showDiagnosticsDialog = false },
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                Text(
-                    text = diagnosticsText,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                )
-            }
-        }
     }
 
     if (showLicenses) {

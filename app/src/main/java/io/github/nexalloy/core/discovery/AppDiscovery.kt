@@ -200,9 +200,9 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.twitter.android",
             appName = "X",
-            defaultBundleName = "Piko Patches",
+            defaultBundleName = "a092devs Patches",
             appIconColor = 0x000000,
-            targets = listOf(AppTarget("12.19.1-release.0")),
+            targets = listOf(AppTarget("12.35.0-prod.01")),
         ),
     )
 

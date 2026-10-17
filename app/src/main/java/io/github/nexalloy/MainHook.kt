@@ -61,7 +61,13 @@ class MainHook : XposedModule() {
             }
             // Register every bundle's resources before any patch adds them to a context.
             loaded.forEach { (info, _) -> BundleResources.register(info.apkPath) }
-            loaded.forEach { (info, patches) -> session.apply(info, patches) }
+            // A bundle that throws while applying must not abort the others, and the session must
+            // always finish: finish() persists the fingerprint cache, and without that every start
+            // of the app would re-run every finder and toast again.
+            loaded.forEach { (info, patches) ->
+                runCatching { session.apply(info, patches) }
+                    .onFailure { session.reportBundleFailure(info.name, it) }
+            }
             session.finish()
         }
     }

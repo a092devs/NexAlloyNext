@@ -57,9 +57,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import io.github.nexalloy.core.BuildConfig
 import io.github.nexalloy.core.R
 import io.github.nexalloy.core.compatibility.VersionComparator
-import io.github.nexalloy.core.discovery.AppItemState
 import io.github.nexalloy.ui.MainActivity
 import io.github.nexalloy.ui.ManagerState
 import io.github.nexalloy.ui.ManagerViewModel
@@ -80,7 +80,6 @@ private enum class AppFilter {
     UPDATES,
     SCOPE,
     CONFLICTS,
-    UNINSTALLED,
 }
 
 @Composable
@@ -135,7 +134,7 @@ fun HomeContent(
                     StatusCard(
                         active = state.isActive,
                         title = stringResource(if (state.isActive) R.string.module_active_title else R.string.module_inactive_title),
-                        text = if (state.isActive) state.framework.orEmpty() else stringResource(R.string.module_inactive_summary),
+                        text = if (state.isActive) stringResource(R.string.module_active_summary, BuildConfig.VERSION_NAME) else stringResource(R.string.module_inactive_summary),
                     )
                 }
 
@@ -262,53 +261,35 @@ fun HomeContent(
                                 onClick = { selectedFilter = AppFilter.CONFLICTS },
                             )
                         }
-                        item {
-                            ThemedChip(
-                                label = stringResource(R.string.status_not_installed),
-                                selected = selectedFilter == AppFilter.UNINSTALLED,
-                                onClick = { selectedFilter = AppFilter.UNINSTALLED },
-                            )
-                        }
                     }
                 }
 
-                // Filter apps
-                val allApps = state.appCatalog.filter { item ->
-                    if (state.searchQuery.isBlank()) true else {
+                // Only apps installed on this device are listed.
+                val installedApps = state.appCatalog.filter { item ->
+                    if (!item.isInstalled) false
+                    else if (state.searchQuery.isBlank()) true
+                    else {
                         val q = state.searchQuery.trim().lowercase()
                         item.appName.lowercase().contains(q) || item.packageName.lowercase().contains(q)
                     }
                 }
 
                 val filteredApps = when (selectedFilter) {
-                    AppFilter.ALL -> allApps
-                    AppFilter.UPDATES -> allApps.filter { app ->
-                        app.isInstalled && app.recommendedVersion != null &&
+                    AppFilter.ALL -> installedApps
+                    AppFilter.UPDATES -> installedApps.filter { app ->
+                        app.recommendedVersion != null &&
                             app.installedVersionName != null &&
                             VersionComparator.compare(app.installedVersionName, app.recommendedVersion) < 0
                     }
-                    AppFilter.SCOPE -> allApps.filter { it.isInstalled && !it.inScope }
-                    AppFilter.CONFLICTS -> allApps.filter { it.hasConflicts }
-                    AppFilter.UNINSTALLED -> allApps.filter { !it.isInstalled }
+                    AppFilter.SCOPE -> installedApps.filter { !it.inScope }
+                    AppFilter.CONFLICTS -> installedApps.filter { it.hasConflicts }
                 }
 
-                val installedSection = filteredApps.filter { it.isInstalled }
-                val uninstalledSection = filteredApps.filter { !it.isInstalled }
-
-                if (installedSection.isNotEmpty()) {
+                if (filteredApps.isNotEmpty()) {
                     item {
                         SectionTitle(stringResource(R.string.category_installed_apps))
                     }
-                    items(installedSection, key = { it.packageName }) { app ->
-                        AppCard(app = app, onClick = { onOpenApp(app.packageName) })
-                    }
-                }
-
-                if (uninstalledSection.isNotEmpty() && selectedFilter != AppFilter.UPDATES && selectedFilter != AppFilter.SCOPE) {
-                    item {
-                        SectionTitle(stringResource(R.string.category_supported_uninstalled))
-                    }
-                    items(uninstalledSection, key = { it.packageName }) { app ->
+                    items(filteredApps, key = { it.packageName }) { app ->
                         AppCard(app = app, onClick = { onOpenApp(app.packageName) })
                     }
                 }

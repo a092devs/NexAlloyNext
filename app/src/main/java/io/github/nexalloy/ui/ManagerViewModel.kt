@@ -4,14 +4,12 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.libxposed.service.XposedService
 import io.github.nexalloy.AppPatchInfo
 import io.github.nexalloy.Patch
 import io.github.nexalloy.activity.SettingApplication
-import io.github.nexalloy.core.BuildConfig
 import io.github.nexalloy.core.BundleRegistry
 import io.github.nexalloy.core.InstalledBundle
 import io.github.nexalloy.core.ModuleStatus
@@ -84,23 +82,6 @@ data class ManagerState(
     }
 
     val sourcesWithUpdates get() = sources.filter { it.enabled }.filter(::hasUpdate)
-
-    val installedPatchedApps: List<AppItemState>
-        get() = appCatalog.filter { it.isInstalled && it.bundles.isNotEmpty() }
-            .filter { matchesSearch(it) }
-
-    val supportedUninstalledApps: List<AppItemState>
-        get() = appCatalog.filter { !it.isInstalled && it.bundles.isNotEmpty() }
-            .filter { matchesSearch(it) }
-
-    val appsWithConflicts: List<AppItemState>
-        get() = appCatalog.filter { it.hasConflicts }.filter { matchesSearch(it) }
-
-    private fun matchesSearch(item: AppItemState): Boolean {
-        if (searchQuery.isBlank()) return true
-        val query = searchQuery.trim().lowercase()
-        return item.appName.lowercase().contains(query) || item.packageName.lowercase().contains(query)
-    }
 }
 
 /** The patches of one bundle for one app, with whether each is enabled and any duplicates. */
@@ -274,9 +255,12 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             }
             if (userInitiated) {
                 val state = _state.value
+                val update = state.appUpdate
                 when {
                     appUpdate.isFailure -> message(R.string.update_check_failed, appUpdate.exceptionOrNull()?.message)
-                    state.appUpdate == null && state.sourcesWithUpdates.isEmpty() -> message(R.string.up_to_date)
+                    update != null -> message(R.string.app_update_available, update.tag)
+                    state.sourcesWithUpdates.isNotEmpty() -> message(R.string.patch_updates_available)
+                    else -> message(R.string.up_to_date)
                 }
             }
         }
@@ -537,31 +521,6 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val cacheDir = File(context.codeCacheDir, "nexalloy")
             val count = cacheDir.listFiles()?.count { it.delete() } ?: 0
             message(R.string.cache_cleared, count)
-        }
-    }
-
-    fun exportDiagnostics(): String {
-        val state = _state.value
-        return buildString {
-            appendLine("=== NexAlloyNext Diagnostics ===")
-            appendLine("App Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-            appendLine("Commit: ${BuildConfig.COMMIT_HASH}")
-            appendLine("Android OS: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
-            appendLine("LSPosed Active: ${state.isActive}")
-            appendLine("Framework: ${state.framework ?: "None / Inactive"}")
-            appendLine("Missing Scope: ${state.missingScope.joinToString().ifEmpty { "None" }}")
-            appendLine("Configured Sources: ${state.sources.size}")
-            for (s in state.sources) {
-                appendLine(" - ${s.name} [${s.provenance}] (${s.url}): enabled=${s.enabled}, installed=${s.installedVersion ?: "None"}, lastRefresh=${s.lastRefreshTime}, error=${s.lastError ?: "None"}")
-            }
-            appendLine("Installed Bundles: ${state.bundles.size}")
-            for (b in state.bundles) {
-                appendLine(" - ${b.name} v${b.version} (${b.id}), source=${b.sourceId ?: "manual"}, enabled=${b.enabled}, apps=${b.apps.keys.joinToString()}")
-            }
-            appendLine("App Catalog Entries: ${state.appCatalog.size}")
-            for (app in state.appCatalog) {
-                appendLine(" - ${app.appName} (${app.packageName}): installed=${app.installedVersionName ?: "No"}, compat=${app.compatibility}, sources=${app.sourceNames.joinToString()}, conflicts=${app.hasConflicts}")
-            }
         }
     }
 

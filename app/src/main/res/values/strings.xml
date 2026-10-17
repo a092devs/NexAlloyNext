@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">NexAlloyNext</string>
     <string name="app_description">LSPosed module that applies patch bundles from patch sources.</string>
-    <string name="slogan_summary">NexAlloyNext is an LSPosed module that applies patch bundles from patch sources. Patch bundles run code inside the apps they patch: only add patch sources you trust.</string>
+    <string name="slogan_summary">NexAlloyNext applies patch bundles from patch sources. Only add sources you trust.</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -10,6 +10,7 @@
 
     <!-- Home -->
     <string name="module_active_title">Module is active</string>
+    <string name="module_active_summary">NexAlloyNext %s</string>
     <string name="module_inactive_title">Module is not active</string>
     <string name="module_inactive_summary">Enable NexAlloyNext in LSPosed and restart the app.</string>
     <string name="app_update_title">NexAlloyNext %s is available</string>
@@ -33,6 +34,8 @@
     <string name="action_request">Request</string>
     <string name="up_to_date">Everything is up to date</string>
     <string name="update_check_failed">Update check failed: %s</string>
+    <string name="app_update_available">A new NexAlloy version is available: %s</string>
+    <string name="patch_updates_available">Patch source updates are available</string>
 
     <!-- Patches -->
     <string name="patch_sources_summary">Patch sources provide patch bundles, like the patch sources of Morphe. A source is a GitHub repository whose releases contain .nxb bundles, or the URL of a bundle JSON file.</string>
@@ -100,7 +103,6 @@
     <string name="status_missing_bundle">Missing Bundle</string>
     <string name="status_not_installed">Not Installed</string>
     <string name="category_installed_apps">Installed Applications</string>
-    <string name="category_supported_uninstalled">Supported Apps (Not Installed)</string>
     <string name="search_apps_hint">Search applications or packages…</string>
     <string name="filter_all">All</string>
     <string name="filter_updates">Updates</string>
@@ -121,15 +123,11 @@
     <string name="color_scheme_amber">Amber</string>
     <string name="color_scheme_rose">Rose</string>
     <string name="color_scheme_ocean">Ocean</string>
-    <string name="miuix_floating_nav_title">Floating navigation bar</string>
-    <string name="miuix_floating_nav_summary">Detached bar over the content with the official Miuix blur backdrop. Off by default; patches and navigation are unaffected.</string>
+    <string name="miuix_floating_nav_title">Floating bar</string>
+    <string name="miuix_floating_nav_summary">Floats over the content with Miuix blur; off by default.</string>
     <string name="cache_cleared">Cleared %d cached files</string>
     <string name="action_clear_cache">Clear DexKit cache</string>
     <string name="action_clear_cache_summary">Removes cached bytecode fingerprints and resets hook index</string>
-    <string name="diagnostics_title">Diagnostics</string>
-    <string name="diagnostics_summary">View system environment, LSPosed framework state, and bundles</string>
-    <string name="action_copy_diagnostics">Copy to clipboard</string>
-    <string name="diagnostics_copied">Diagnostics copied to clipboard</string>
     <string name="patches_count">%d patches available</string>
     <string name="search_patches_hint">Search patches…</string>
     <string name="no_patches_found">No matching patches found</string>
