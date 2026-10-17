@@ -5,7 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.2.0
+
+- Coordinated Versioning Architecture: introduced coordinated release series `3.2`, establishing the manager version as the major compatibility series while enabling independent patch-only updates (`3.2.0`, `3.2.1`...) without requiring a new manager build.
+- Bundle Compatibility Validation: `BundleManifest` now validates bundle compatibility metadata (`compatibilitySeries`, `minManagerVersion`, `maxManagerVersion`) using semantic version comparison, cleanly rejecting incompatible bundles with explicit user feedback while preserving full backwards compatibility for legacy and third-party bundles.
+- Seamless Bundle Migration: added automated migration when updating from the legacy `a092devs` bundle to `NexFusion Patches` (`io.github.nexalloy.patches.nexfusion`), automatically replacing previous installations without resource package ID conflicts while preserving user toggle states and source tracking.
+- Smart Release Discovery: `SourceClient` now discovers and prioritizes releases compatible with the running manager's compatibility series, preventing accidental installation of breaking future series releases during patch-only update checks.
+- Supported App Catalog: updated default bundle associations across all community-ported applications (Instagram, Spotify, Reddit, Discord, X, Gboard, LinkedIn, Proton VPN, MiXplorer) to `NexFusion Patches`.
+
 ## 3.1.29
+
 
 - Spotify Bundle Mapping: mapped Spotify to `a092devs Patches` in the supported app catalog.
 

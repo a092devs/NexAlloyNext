@@ -136,7 +136,7 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "ch.protonvpn.android",
             appName = "Proton VPN",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x6D4AFF,
             targets = listOf(
                 AppTarget("5.20.74.0"),
@@ -149,47 +149,47 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.google.android.inputmethod.latin",
             appName = "Gboard",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x4285F4,
             targets = listOf(AppTarget("18.4.1.985164140-beta-arm64-v8a")),
         ),
         KnownSupportedApp(
             packageName = "com.facebook.katana",
             appName = "Facebook",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0866FF,
             targets = listOf(AppTarget("582.0.0.50.54"), AppTarget("581.0.0.45.54")),
         ),
         KnownSupportedApp(
             packageName = "com.discord",
             appName = "Discord",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x5865F2,
             targets = listOf(AppTarget("348.10")),
         ),
         KnownSupportedApp(
             packageName = "com.linkedin.android",
             appName = "LinkedIn",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0A66C2,
             targets = listOf(AppTarget("4.1.1261"), AppTarget("4.1.1259"), AppTarget("4.1.1255.1")),
         ),
         KnownSupportedApp(
             packageName = "com.mixplorer",
             appName = "MiXplorer",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = null,
         ),
         KnownSupportedApp(
             packageName = "com.spotify.music",
             appName = "Spotify",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x1ED760,
         ),
         KnownSupportedApp(
             packageName = "com.instagram.android",
             appName = "Instagram",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0xE1306C,
             targets = listOf(
                 AppTarget("451.0.0.53.80"),
@@ -200,7 +200,7 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.twitter.android",
             appName = "X",
-            defaultBundleName = "a092devs Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x000000,
             targets = listOf(AppTarget("12.35.0-prod.01")),
         ),

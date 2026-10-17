@@ -10,6 +10,8 @@ import io.github.nexalloy.PATCHER_API_VERSION
 import io.github.nexalloy.PatchBundle
 import java.io.File
 
+import io.github.nexalloy.core.compatibility.VersionComparator
+
 /**
  * Metadata of a bundle APK, read from its AndroidManifest without loading any code.
  *
@@ -26,12 +28,64 @@ class BundleManifest(
     val description: String,
     /** Package id of the bundle's resources, 0 if unknown. */
     val resourcePackageId: Int,
+    /** Compatibility series (e.g. "3.2"). */
+    val compatibilitySeries: String = "",
+    /** Minimum compatible NexAlloyNext manager version (e.g. "3.2.0"). */
+    val minManagerVersion: String = "",
+    /** Maximum compatible NexAlloyNext manager version. */
+    val maxManagerVersion: String = "",
 ) {
+    /**
+     * Validates whether this bundle is compatible with the running or specified manager version.
+     * Uses semantic version comparison.
+     *
+     * @throws IncompatibleBundleException if the bundle is incompatible with [managerVersion].
+     */
+    fun validateCompatibility(managerVersion: String = BuildConfig.VERSION_NAME) {
+        val cleanManager = managerVersion.trim().removePrefix("v").removePrefix("V").trim()
+        val managerSeries = cleanManager.split('.').take(2).joinToString(".")
+
+        if (compatibilitySeries.isNotBlank()) {
+            val cleanSeries = compatibilitySeries.trim().removePrefix("v").removePrefix("V").trim()
+            if (cleanSeries != managerSeries) {
+                val seriesComparison = VersionComparator.compare(cleanSeries, managerSeries)
+                if (seriesComparison > 0) {
+                    throw IncompatibleBundleException(
+                        "Bundle '$name' $version requires NexAlloyNext series $compatibilitySeries (current: $managerVersion). Please update NexAlloyNext."
+                    )
+                } else if (seriesComparison < 0) {
+                    throw IncompatibleBundleException(
+                        "Bundle '$name' $version is designed for older NexAlloyNext series $compatibilitySeries (current: $managerVersion)."
+                    )
+                }
+            }
+        }
+
+        if (minManagerVersion.isNotBlank()) {
+            if (VersionComparator.compare(cleanManager, minManagerVersion) < 0) {
+                throw IncompatibleBundleException(
+                    "Bundle '$name' $version requires NexAlloyNext $minManagerVersion or newer (current: $managerVersion). Please update NexAlloyNext."
+                )
+            }
+        }
+
+        if (maxManagerVersion.isNotBlank()) {
+            if (VersionComparator.compare(cleanManager, maxManagerVersion) > 0) {
+                throw IncompatibleBundleException(
+                    "Bundle '$name' $version requires NexAlloyNext $maxManagerVersion or older (current: $managerVersion)."
+                )
+            }
+        }
+    }
+
     companion object {
         const val META_ENTRY = "nexalloy.bundle.entry"
         const val META_API_VERSION = "nexalloy.bundle.apiVersion"
         const val META_AUTHOR = "nexalloy.bundle.author"
         const val META_DESCRIPTION = "nexalloy.bundle.description"
+        const val META_COMPATIBILITY_SERIES = "nexalloy.bundle.compatibilitySeries"
+        const val META_MIN_MANAGER_VERSION = "nexalloy.bundle.minManagerVersion"
+        const val META_MAX_MANAGER_VERSION = "nexalloy.bundle.maxManagerVersion"
 
         /** @throws InvalidBundleException if [apk] is not a usable patch bundle. */
         fun read(packageManager: PackageManager, apk: File): BundleManifest {
@@ -74,12 +128,18 @@ class BundleManifest(
                 author = metaString(META_AUTHOR),
                 description = metaString(META_DESCRIPTION),
                 resourcePackageId = app.labelRes ushr 24,
+                compatibilitySeries = metaString(META_COMPATIBILITY_SERIES),
+                minManagerVersion = metaString(META_MIN_MANAGER_VERSION),
+                maxManagerVersion = metaString(META_MAX_MANAGER_VERSION),
             )
         }
     }
 }
 
-class InvalidBundleException(message: String, cause: Throwable? = null) : Exception(message, cause)
+open class InvalidBundleException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+class IncompatibleBundleException(message: String, cause: Throwable? = null) : InvalidBundleException(message, cause)
+
 
 /**
  * Gives bundles access to the classes NexAlloy shares with them: the patcher API and what it exposes.

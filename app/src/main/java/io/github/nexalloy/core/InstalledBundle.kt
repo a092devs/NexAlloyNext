@@ -33,6 +33,12 @@ data class InstalledBundle(
     val targets: Map<String, List<AppTarget>> = emptyMap(),
     /** Package name to the brand color (0xRRGGBB) the bundle declares for the app. */
     val appIconColors: Map<String, Int> = emptyMap(),
+    /** Compatibility series (e.g. "3.2"). */
+    val compatibilitySeries: String = "",
+    /** Minimum compatible NexAlloyNext manager version. */
+    val minManagerVersion: String = "",
+    /** Maximum compatible NexAlloyNext manager version. */
+    val maxManagerVersion: String = "",
 ) {
     /** The version this bundle recommends for an app, or null for any version. */
     fun recommendedVersion(packageName: String): String? =
@@ -50,6 +56,9 @@ data class InstalledBundle(
         .put("sourceId", sourceId)
         .put("apps", JSONObject(apps))
         .put("resourcePackageId", resourcePackageId)
+        .put("compatibilitySeries", compatibilitySeries)
+        .put("minManagerVersion", minManagerVersion)
+        .put("maxManagerVersion", maxManagerVersion)
         .put("appIconColors", JSONObject(appIconColors))
         .put("targets", JSONObject().apply {
             targets.forEach { (packageName, versions) ->
@@ -99,6 +108,9 @@ data class InstalledBundle(
                 sourceId = json.optString("sourceId").takeIf { it.isNotEmpty() && it != "null" },
                 apps = appsMap,
                 resourcePackageId = json.optInt("resourcePackageId", 0),
+                compatibilitySeries = json.optString("compatibilitySeries", ""),
+                minManagerVersion = json.optString("minManagerVersion", ""),
+                maxManagerVersion = json.optString("maxManagerVersion", ""),
                 appIconColors = colorsMap,
                 targets = targetsMap,
             )

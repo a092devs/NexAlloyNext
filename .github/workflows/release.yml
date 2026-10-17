@@ -49,6 +49,23 @@ jobs:
             - name: Grant execute permission for gradlew
               run: chmod +x gradlew
 
+            - name: Validate version and release tag
+              shell: bash
+              env:
+                  RELEASE_TAG: ${{ env.TAG }}
+              run: |
+                  set -euo pipefail
+                  if [[ ! "$RELEASE_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
+                    echo "::error::Invalid release tag format: $RELEASE_TAG"
+                    exit 1
+                  fi
+                  app_version="$(sed -nE 's/.*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts | head -n1)"
+                  if [[ -n "$app_version" && "$RELEASE_TAG" != "$app_version"* ]]; then
+                    echo "::error::Conflicting version assignment: release tag $RELEASE_TAG does not match manager app versionName $app_version in app/build.gradle.kts"
+                    exit 1
+                  fi
+
+
             - name: Prepare signing
               shell: bash
               env:

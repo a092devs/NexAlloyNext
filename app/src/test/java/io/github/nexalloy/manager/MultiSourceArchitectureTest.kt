@@ -62,7 +62,7 @@ class MultiSourceArchitectureTest {
             pageUrl = "https://github.com/a092devs/NexAlloyNext-Patches/releases/tag/v1.0.5",
             bundles = listOf(
                 "nexalloy-1.0.5.nxb" to "https://github.com/download/nexalloy.nxb",
-                "a092devs-1.8.0.nxb" to "https://github.com/download/a092devs.nxb",
+                "nexfusion-3.2.0.nxb" to "https://github.com/download/nexfusion.nxb",
             ),
         )
 

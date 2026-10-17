@@ -20,8 +20,8 @@ android {
 
     defaultConfig {
         applicationId = "io.github.nexalloy.next"
-        versionCode = 29
-        versionName = "3.1.$versionCode"
+        versionCode = 30
+        versionName = "3.2.0"
         buildConfigField("String", "COMMIT_HASH", "\"${gitCommitHashProvider.get()}\"")
         buildConfigField("long", "COMMIT_DATE", "${gitCommitDateProvider.get()}L")
         // GitHub repository checked for updates and used as the default patch source.

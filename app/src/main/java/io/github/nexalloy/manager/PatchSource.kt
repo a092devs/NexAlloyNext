@@ -315,12 +315,16 @@ object SourceClient {
             }
         // Without a stable release, fall back to pre-releases, e.g. for projects still in alpha.
         val allowPrerelease = prerelease || candidates.none { !it.optBoolean("prerelease") }
-        for (release in candidates) {
+        val compatibleCandidates = candidates.filter { isReleaseCompatible(it, BuildConfig.VERSION_NAME) }
+        val effectiveCandidates = compatibleCandidates.ifEmpty { candidates }
+
+        for (release in effectiveCandidates) {
             if (release.optBoolean("prerelease") && !allowPrerelease) continue
             val assets = release.getJSONArray("assets")
-            val bundles = (0 until assets.length()).map { assets.getJSONObject(it) }
+            val rawBundles = (0 until assets.length()).map { assets.getJSONObject(it) }
                 .filter { it.getString("name").endsWith(BUNDLE_EXTENSION) }
                 .map { it.getString("name") to it.getString("browser_download_url") }
+            val bundles = deduplicateBundleAssets(rawBundles)
             if (bundles.isEmpty()) continue
             return SourceRelease(
                 version = release.getString("tag_name"),
@@ -329,7 +333,58 @@ object SourceClient {
                 bundles = bundles,
             )
         }
-        throw SourceException("No release of $repository contains a $BUNDLE_EXTENSION patch bundle")
+        throw SourceException("No compatible release of $repository contains a $BUNDLE_EXTENSION patch bundle")
+    }
+
+    private fun isReleaseCompatible(release: JSONObject, managerVersion: String): Boolean {
+        val cleanManager = managerVersion.trim().removePrefix("v").removePrefix("V").trim()
+        val managerSeries = cleanManager.split('.').take(2).joinToString(".")
+
+        val body = release.optString("body", "")
+        val tagName = release.optString("tag_name", "").trim().removePrefix("v").removePrefix("V").trim()
+
+        // 1. Explicit metadata in release notes
+        val minManagerMatch = Regex("""(?:min[-_]manager(?:[-_]version)?|compatible[-_]manager)\s*[:=]\s*([0-9.]+)""", RegexOption.IGNORE_CASE)
+            .find(body)?.groupValues?.get(1)
+        if (minManagerMatch != null) {
+            if (VersionComparator.compare(cleanManager, minManagerMatch) < 0) return false
+        }
+
+        val seriesMatch = Regex("""(?:compat(?:ibility)?[-_]series|manager[-_]series)\s*[:=]\s*([0-9.]+)""", RegexOption.IGNORE_CASE)
+            .find(body)?.groupValues?.get(1)
+        if (seriesMatch != null) {
+            val seriesCmp = VersionComparator.compare(seriesMatch, managerSeries)
+            if (seriesCmp != 0) return false
+        }
+
+        // 2. Coordinated versioning convention:
+        // If release tag follows semantic versioning X.Y.Z, check if it targets a higher manager series
+        val tagSegments = tagName.split('.')
+        if (tagSegments.size >= 3 && tagSegments.all { it.takeWhile { c -> c.isDigit() }.isNotEmpty() }) {
+            val tagSeries = tagSegments.take(2).joinToString(".")
+            if (VersionComparator.compare(tagSeries, managerSeries) > 0) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private fun deduplicateBundleAssets(assets: List<Pair<String, String>>): List<Pair<String, String>> {
+        val byBase = mutableMapOf<String, Pair<String, String>>()
+        for (asset in assets) {
+            val name = asset.first.removeSuffix(BUNDLE_EXTENSION)
+            val baseName = name.split('-').first()
+            val existing = byBase[baseName]
+            if (existing == null) {
+                byBase[baseName] = asset
+            } else {
+                if (name.contains('-') && !existing.first.contains('-')) {
+                    byBase[baseName] = asset
+                }
+            }
+        }
+        return byBase.values.toList()
     }
 
     private fun jsonRelease(url: String): SourceRelease {

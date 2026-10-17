@@ -92,12 +92,20 @@ class BundleManager(private val context: Context, private val service: XposedSer
             val hash = digest.digest().joinToString("") { "%02x".format(it) }.take(16)
 
             val manifest = BundleManifest.read(context.packageManager, tmp)
+            manifest.validateCompatibility()
+
             var clash = installed.find {
                 it.id != manifest.id && manifest.resourcePackageId != 0 && it.resourcePackageId == manifest.resourcePackageId
             }
-            // A source that renamed its bundle: the new bundle replaces the old one.
-            if (clash != null && sourceId != null && clash.sourceId == sourceId) {
-                uninstall(clash)
+            var migratedClash: InstalledBundle? = null
+            // A source that renamed its bundle, or seamless migration from a092devs to nexfusion:
+            val isRenamedMigration = clash != null && (
+                (clash.id == "io.github.nexalloy.patches.a092devs" && manifest.id == "io.github.nexalloy.patches.nexfusion") ||
+                (sourceId != null && clash.sourceId == sourceId)
+            )
+            if (isRenamedMigration) {
+                migratedClash = clash
+                uninstall(clash!!)
                 clash = null
             }
             if (clash != null) throw InvalidBundleException(
@@ -121,7 +129,7 @@ class BundleManager(private val context: Context, private val service: XposedSer
                 }
             }
 
-            val previous = installed.find { it.id == manifest.id }
+            val previous = installed.find { it.id == manifest.id } ?: migratedClash
             val bundle = InstalledBundle(
                 id = manifest.id,
                 name = manifest.name,
@@ -134,10 +142,14 @@ class BundleManager(private val context: Context, private val service: XposedSer
                 sourceId = sourceId ?: previous?.sourceId,
                 apps = apps.associate { it.packageName to it.appName },
                 resourcePackageId = manifest.resourcePackageId,
+                compatibilitySeries = manifest.compatibilitySeries,
+                minManagerVersion = manifest.minManagerVersion,
+                maxManagerVersion = manifest.maxManagerVersion,
                 targets = apps.filter { it.targets.isNotEmpty() }.associate { it.packageName to it.targets },
                 appIconColors = apps.mapNotNull { app -> app.appIconColor?.let { app.packageName to it } }.toMap(),
             )
             val updated = installed.filter { it.id != bundle.id } + bundle
+
             registryPrefs?.let { BundleRegistry.write(it, updated) }
             BundleRegistry.write(localPrefs, updated)
 
