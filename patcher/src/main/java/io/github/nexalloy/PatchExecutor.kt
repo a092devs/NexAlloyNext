@@ -124,7 +124,11 @@ class PatchExecutor(
     internal fun executePatches(patches: Array<Patch>) {
         patches.forEach { hook ->
             if (appliedPatches.contains(hook)) return@forEach
-            if (!patchPreferences.getBoolean(patchPreferenceKey(bundle.id, hook.name), hook.use)) return@forEach
+            val isEnabled = patchPreferences.getBoolean(patchPreferenceKey(bundle.id, hook.name), hook.use)
+            if (!isEnabled) {
+                PatcherLog.state { "${bundle.id}: patch '${hook.name}' is DISABLED by user preference" }
+                return@forEach
+            }
 
             // Multi-source conflict prevention: skip duplicates already applied in this session
             if (hook.name.isNotEmpty() && !hook.name.startsWith("<")) {
@@ -145,6 +149,7 @@ class PatchExecutor(
                 if (hook.name.isNotEmpty() && !hook.name.startsWith("<")) {
                     sessionAppliedPatches?.add(hook.name)
                 }
+                PatcherLog.state { "${bundle.id}: applied patch '${hook.name}'" }
             }
         }
     }

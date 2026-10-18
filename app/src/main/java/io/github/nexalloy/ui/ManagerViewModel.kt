@@ -501,8 +501,11 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     fun setPatchEnabled(packageName: String, bundle: InstalledBundle, patch: Patch, enabled: Boolean) {
         val service = _state.value.service
         if (service != null) {
-            service.getRemotePreferences(packageName).edit()
-                .putBoolean(patchPreferenceKey(bundle.id, patch.name), enabled).apply()
+            val prefs = service.getRemotePreferences(packageName)
+            val committed = prefs.edit().putBoolean(patchPreferenceKey(bundle.id, patch.name), enabled).commit()
+            if (!committed) {
+                prefs.edit().putBoolean(patchPreferenceKey(bundle.id, patch.name), enabled).apply()
+            }
         } else {
             message("Settings will be saved when LSPosed framework is active")
         }
@@ -514,11 +517,30 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             message("LSPosed framework service is currently inactive")
             return
         }
-        val editor = service.getRemotePreferences(packageName).edit()
+        val prefs = service.getRemotePreferences(packageName)
+        val editor = prefs.edit()
         for (group in patches) for ((patch, _) in group.patches) {
             editor.putBoolean(patchPreferenceKey(group.bundle.id, patch.name), defaults && patch.use)
         }
-        editor.apply()
+        if (!editor.commit()) {
+            editor.apply()
+        }
+    }
+
+    /** Attempts to kill background processes and opens the system App Info settings to facilitate force stopping. */
+    fun forceStopApp(packageName: String) {
+        runCatching {
+            val am = context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+            am?.killBackgroundProcesses(packageName)
+        }
+        runCatching {
+            val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.fromParts("package", packageName, null)
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        }
+        message(R.string.force_stop_to_apply_summary)
     }
 
     // endregion

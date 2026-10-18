@@ -118,6 +118,12 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                 reload++
             },
         ),
+        ThemedMenuItem(
+            label = "Force stop / App info",
+            onClick = {
+                viewModel.forceStopApp(packageName)
+            },
+        ),
     )
 
     val contentBody: @Composable (PaddingValues) -> Unit = { padding ->
@@ -302,12 +308,24 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                     }
 
                     item {
-                        Text(
-                            stringResource(R.string.force_stop_to_apply_summary),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                stringResource(R.string.force_stop_to_apply_summary),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                            )
+                            ThemedOutlinedButton(
+                                label = "Force stop",
+                                onClick = { viewModel.forceStopApp(packageName) },
+                            )
+                        }
                     }
 
                     // Patch Groups
