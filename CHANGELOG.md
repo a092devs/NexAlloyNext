@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.2.5
+
+- In-App Root Force Stop: "Force stop" button on patch screens now terminates target applications directly via root (`am force-stop`) without redirecting the user to system App Info settings.
+- Version Display Alignment & Color Harmony: fixed layout misalignment on long version strings (e.g. Gboard) by applying single-line ellipsis constraints, hiding redundant "Rec: v..." hints when the installed target is already officially compatible, and harmonizing typography colors to `onSurfaceVariant`.
+- Matched release release parity with NexFusion patch bundle 3.2.5.
+
 ## 3.2.2
 
 - Patch-only release within series `3.2`, patches repo at `3.2.2`.

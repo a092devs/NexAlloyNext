@@ -217,7 +217,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                             Text(
                                                 stringResource(R.string.recommended_version, recommendedVersion),
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.primary,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontWeight = FontWeight.Medium,
                                             )
                                         } else if (allTargets.isEmpty() && allMatchingBundles.isNotEmpty()) {

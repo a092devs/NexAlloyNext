@@ -527,20 +527,33 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Attempts to kill background processes and opens the system App Info settings to facilitate force stopping. */
+    /** Force stops the target application directly via root 'am force-stop' with background process kill fallback. */
     fun forceStopApp(packageName: String) {
-        runCatching {
-            val am = context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
-            am?.killBackgroundProcesses(packageName)
-        }
-        runCatching {
-            val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.fromParts("package", packageName, null)
-                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+        viewModelScope.launch(Dispatchers.IO) {
+            var stoppedViaRoot = false
+            runCatching {
+                val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "am force-stop $packageName"))
+                stoppedViaRoot = process.waitFor() == 0
             }
-            context.startActivity(intent)
+            if (!stoppedViaRoot) {
+                runCatching {
+                    val am = context.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+                    am?.killBackgroundProcesses(packageName)
+                }
+            }
+            val appLabel = runCatching {
+                val pm = context.packageManager
+                pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
+            }.getOrDefault(packageName)
+
+            withContext(Dispatchers.Main) {
+                if (stoppedViaRoot) {
+                    message("Force stopped $appLabel")
+                } else {
+                    message("Stopped background processes for $appLabel")
+                }
+            }
         }
-        message(R.string.force_stop_to_apply_summary)
     }
 
     // endregion

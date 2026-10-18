@@ -150,9 +150,15 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
 
                 Spacer(Modifier.size(4.dp))
 
+                val isCompatible = app.compatibility is CompatibilityStatus.Compatible
+                val shouldShowRec = app.recommendedVersion != null && (
+                    !app.isInstalled || (!isCompatible && app.installedVersionName != null && VersionComparator.compare(app.installedVersionName, app.recommendedVersion) != 0)
+                )
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     val installedText = if (app.isInstalled) {
                         "v${app.installedVersionName ?: "?"}"
@@ -163,24 +169,20 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
                         text = installedText,
                         style = MaterialTheme.typography.labelMedium,
                         color = if (app.isInstalled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = if (shouldShowRec) Modifier.weight(1f, fill = false) else Modifier,
                     )
 
-                    if (app.recommendedVersion != null && app.isInstalled && app.installedVersionName != null) {
-                        val cmp = VersionComparator.compare(app.installedVersionName, app.recommendedVersion)
-                        if (cmp != 0) {
-                            Text(
-                                text = "• Rec: v${app.recommendedVersion}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (cmp < 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium,
-                            )
-                        }
-                    } else if (app.recommendedVersion != null && !app.isInstalled) {
+                    if (shouldShowRec) {
                         Text(
                             text = "• Rec: v${app.recommendedVersion}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Normal,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
                         )
                     }
                 }
