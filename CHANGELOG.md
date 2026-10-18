@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.2.2
+
+- Patch-only release within series `3.2`, patches repo at `3.2.2`.
+- UI fix: update-check refresh now cancels any in-progress job and debounces rapid taps, so the UI stays fluid.
+
 ## 3.2.0
 
 - Coordinated Versioning Architecture: introduced coordinated release series `3.2`, establishing the manager version as the major compatibility series while enabling independent patch-only updates (`3.2.0`, `3.2.1`...) without requiring a new manager build.
