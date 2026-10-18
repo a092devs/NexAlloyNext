@@ -32,6 +32,7 @@ import io.github.nexalloy.updates.AppSettings
 import io.github.nexalloy.updates.AppUpdateChecker
 import io.github.nexalloy.updates.UpdateDownloadState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +41,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import java.io.File
 
 data class ManagerState(
@@ -117,6 +120,8 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
     val messages = _messages.asSharedFlow()
 
     private var ownScopeRequested = false
+    /** Current update-check job so repeated taps cancel the previous one. */
+    private var updateCheckJob: Job? = null
 
     init {
         SettingApplication.addServiceStateListener(this, true)
@@ -216,8 +221,12 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     /** Checks NexAlloy and all enabled sources for updates independently. */
     fun checkUpdates(userInitiated: Boolean = false) {
-        _state.update { it.copy(checkingUpdates = true) }
-        viewModelScope.launch {
+        // Cancel any in-progress check so repeated taps don't stack up.
+        updateCheckJob?.cancel()
+        updateCheckJob = viewModelScope.launch {
+            // Small debounce so a quick tap doesn't retrigger immediately.
+            delay(200)
+            _state.update { it.copy(checkingUpdates = true) }
             val appUpdate = withContext(Dispatchers.IO) { runCatching { AppUpdateChecker.latest() } }
             val sources = store.all()
             val currentReleases = _state.value.releases.toMutableMap()
