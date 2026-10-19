@@ -154,6 +154,18 @@ object AppDiscovery {
             targets = listOf(AppTarget("18.4.1.985164140-beta-arm64-v8a")),
         ),
         KnownSupportedApp(
+            packageName = "com.google.android.gm",
+            appName = "Gmail",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0xEA4335,
+        ),
+        KnownSupportedApp(
+            packageName = "com.google.android.googlequicksearchbox",
+            appName = "Google (Discover)",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x4285F4,
+        ),
+        KnownSupportedApp(
             packageName = "com.facebook.katana",
             appName = "Facebook",
             defaultBundleName = "NexFusion Patches",

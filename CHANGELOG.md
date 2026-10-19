@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.3.0
+
+- Coordinated Versioning Series 3.3: Updated compatibility series to `3.3` for `NexFusion` 3.3.0 patch bundle release parity.
+- Supported App Catalog: Added `Gmail` (`com.google.android.gm`) and `Google (Discover)` (`com.google.android.googlequicksearchbox`) to default supported applications list mapped to `NexFusion Patches`.
+
 ## 3.2.5
 
 - In-App Root Force Stop: "Force stop" button on patch screens now terminates target applications directly via root (`am force-stop`) without redirecting the user to system App Info settings.
