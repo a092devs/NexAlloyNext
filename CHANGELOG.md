@@ -5,6 +5,13 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.3.2
+
+- Honest Process Lifecycle & Force-Stop Control: Distinguishes genuine root `am force-stop` execution from background process termination (`killBackgroundProcesses`), providing truthful status feedback without false success claims.
+- 1-Tap App Info Navigation: Added direct "App info" button and menu action on each app's patch screen to quickly navigate to Android system settings for manual force-stops on unrooted devices.
+- Curated Catalog & Upstream Attribution: Updated catalog entries with the Facebook media downloader (photos, videos, Reels, audio, stories) and consolidated Reddit patches, adding upstream attribution for `SysAdminDoc/Hushfacebook` and `gnadgnaoh/NexAlloy-XES`.
+- Repository Maintenance: Removed dead links to internal audit files and aligned release metadata.
+
 ## 3.3.0
 
 - Coordinated Versioning Series 3.3: Updated compatibility series to `3.3` for `NexFusion` 3.3.0 patch bundle release parity.

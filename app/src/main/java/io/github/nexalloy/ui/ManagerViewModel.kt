@@ -527,7 +527,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    /** Force stops the target application directly via root 'am force-stop' with background process kill fallback. */
+    /** Force stops the target application via root 'am force-stop' with background process kill fallback. */
     fun forceStopApp(packageName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             var stoppedViaRoot = false
@@ -550,9 +550,22 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                 if (stoppedViaRoot) {
                     message("Force stopped $appLabel")
                 } else {
-                    message("Stopped background processes for $appLabel")
+                    message("Terminated background processes for $appLabel. True force-stop requires root or App Info.")
                 }
             }
+        }
+    }
+
+    /** Opens Android System App Info settings page for the specified package. */
+    fun openAppInfo(packageName: String) {
+        val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.fromParts("package", packageName, null)
+            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        runCatching {
+            context.startActivity(intent)
+        }.onFailure {
+            message("Could not open App Info for $packageName")
         }
     }
 

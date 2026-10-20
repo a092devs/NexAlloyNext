@@ -38,6 +38,10 @@ Unlike traditional ahead-of-time (AOT) patchers that decompile, modify, re-sign,
 - Semantic version comparison with trailing zero normalization and fail-safe SemVer evaluation.
 - No hardcoded "tested" claims: version recommendations reflect the targets declared by the loaded bundles.
 
+### 4. Honest Process Lifecycle & Force-Stop Control
+- Distinguishes genuine root `am force-stop` execution from background process termination (`killBackgroundProcesses`), ensuring truthful feedback without false success claims.
+- Integrated 1-tap **App Info navigation** directly from the patch screen and overflow menu for quick manual force-stops on unrooted devices.
+
 ---
 
 ## Appearance & Theming
@@ -60,7 +64,7 @@ The floating navigation bar detaches the bottom bar from the layout over the con
 2. **Configure Scope:** Ensure the target applications (e.g. YouTube, YouTube Music, Spotify, Reddit, Google Photos, Instagram, X) are included in the module's LSPosed scope.
 3. **Install Bundles:** Navigate to the **Patches** tab. The curated repository (`a092devs/NexAlloyNext-Patches`) is preconfigured; tap **Install**.
 4. **Customize Hooks:** Select an app on the **Home** tab to toggle individual patches (e.g. ad blocking, background playback, SponsorBlock).
-5. **Apply:** Force stop the target application to let LSPosed attach the updated hooks.
+5. **Apply:** Use the "Force stop" button or 1-tap "App info" shortcut on the app's patches screen to stop the target application and let LSPosed attach the updated hooks.
 
 ---
 
@@ -70,8 +74,8 @@ The official companion patch repository is maintained at:
 - [a092devs/NexAlloyNext-Patches](https://github.com/a092devs/NexAlloyNext-Patches)
 
 Bundles provided include:
-- `nexalloy`: YouTube, YouTube Music, Reddit, and Google Photos.
-- `nexfusion` (`NexFusion Patches`): community-ported patches for Discord, Facebook, Gboard (PixelBoard rounded keycaps & AI flag ports), Gmail (Hide ads), Google (Filter Discover ads), Instagram (HushGram & Piko ports), LinkedIn, MiXplorer, Proton VPN, Reddit, Spotify (ad muting/UI customization), and X (Twitter).
+- `nexalloy`: YouTube, YouTube Music, and Google Photos.
+- `nexfusion` (`NexFusion Patches`): community-ported patches for Discord, Facebook (media downloader for photos, videos, reels, stories; sponsored & telemetry filtering), Gboard (PixelBoard rounded keycaps & AI flag ports), Gmail (Hide ads), Google (Filter Discover ads), Instagram (HushGram & Piko download & audio options), LinkedIn, MiXplorer, Proton VPN, Reddit (consolidated ad blocking, start as guest, link sanitizer, and UI customizations), Spotify (ad muting/UI customization), and X (Twitter).
 
 ---
 
@@ -79,8 +83,7 @@ Bundles provided include:
 
 - **Version recommendations** come from each bundle's declared targets — the versions its maintainers verified the hooks against. A newer installed app version is not guaranteed to work; the app shows the bundle's target and lets you decide.
 - **Runtime-only scope:** Features that require manifest, resource, or bytecode changes that cannot be reproduced through runtime hooks are intentionally not implemented. NexAlloy will not fall back to APK patching.
-- **Excluded targets:** Banking, payment, and security-critical applications are deliberately unsupported, even where upstream patch projects target them.
-- **Per-app feasibility** (including features that were investigated and found runtime-incompatible) is documented in the patches repository's [installed-app audit](https://github.com/a092devs/NexAlloyNext-Patches/blob/main/docs/installed-app-patch-audit.md).
+- **Excluded targets:** Banking, payment, and security-critical applications are deliberately unsupported, even where upstream patch projects target them.
 
 ---
 
@@ -129,6 +132,8 @@ cd NexAlloyNext
 - [DexKit](https://luckypray.org/DexKit/en/): High-performance Dex runtime analysis library
 - [LSPosed](https://github.com/LSPosed/LSPosed): ART hooking framework and libxposed API 101
 - [Morphe](https://morphe.software): Fingerprint API inspiration and bytecode hook specifications
+- [SysAdminDoc/Hushfacebook](https://github.com/SysAdminDoc/Hushfacebook): Facebook runtime hook specifications and media extraction
+- [gnadgnaoh/NexAlloy-XES](https://github.com/gnadgnaoh/NexAlloy-XES): Gmail inbox and Google Discover ad filtering specifications
 
 ---
 

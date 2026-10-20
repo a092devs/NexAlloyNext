@@ -119,7 +119,13 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
             },
         ),
         ThemedMenuItem(
-            label = "Force stop / App info",
+            label = "Open App Info",
+            onClick = {
+                viewModel.openAppInfo(packageName)
+            },
+        ),
+        ThemedMenuItem(
+            label = "Force stop",
             onClick = {
                 viewModel.forceStopApp(packageName)
             },
@@ -321,10 +327,16 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f).padding(end = 8.dp),
                             )
-                            ThemedOutlinedButton(
-                                label = "Force stop",
-                                onClick = { viewModel.forceStopApp(packageName) },
-                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                ThemedOutlinedButton(
+                                    label = "App info",
+                                    onClick = { viewModel.openAppInfo(packageName) },
+                                )
+                                ThemedOutlinedButton(
+                                    label = "Force stop",
+                                    onClick = { viewModel.forceStopApp(packageName) },
+                                )
+                            }
                         }
                     }
 
