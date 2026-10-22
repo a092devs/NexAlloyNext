@@ -125,7 +125,7 @@
     <string name="color_scheme_rose">Rose</string>
     <string name="color_scheme_ocean">Ocean</string>
     <string name="miuix_floating_nav_title">Floating bar</string>
-    <string name="miuix_floating_nav_summary">Floats over the content with Miuix blur; off by default.</string>
+    <string name="miuix_floating_nav_summary">Floats over the content with Miuix blur.</string>
     <string name="cache_cleared">Cleared %d cached files</string>
     <string name="action_clear_cache">Clear DexKit cache</string>
     <string name="action_clear_cache_summary">Removes cached bytecode fingerprints and resets hook index</string>

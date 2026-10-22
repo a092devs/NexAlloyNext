@@ -66,7 +66,7 @@ data class ManagerState(
     val currentTheme: String = AppSettings.THEME_SYSTEM,
     val currentThemeStyle: String = AppSettings.THEME_STYLE_MATERIAL3,
     val currentColorScheme: String = AppSettings.COLOR_SCHEME_DEFAULT,
-    /** Miuix-only: floating navigation bar preference. Disabled by default. */
+    /** Miuix-only: floating navigation bar preference. Enabled by default. */
     val floatingNavigation: Boolean = AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION,
     val searchQuery: String = "",
 ) {

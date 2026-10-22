@@ -86,6 +86,7 @@ import io.github.nexalloy.ui.screens.HomeScreen
 import io.github.nexalloy.ui.screens.PatchesScreen
 import io.github.nexalloy.ui.screens.SettingsScreen
 import io.github.nexalloy.ui.theme.NexAlloyTheme
+import io.github.nexalloy.ui.theme.LocalNexAlloyThemeConfig
 import io.github.nexalloy.ui.theme.isMiuixStyle
 import io.github.nexalloy.updates.AppSettings
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
@@ -244,48 +245,52 @@ private fun Material3ManagerApp(
         viewModel.messages.collect { snackbar.showSnackbar(it) }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbar) },
-        bottomBar = {
-            if (isTopLevel) {
-                NavigationBar {
-                    topLevel.forEach { item ->
-                        NavigationBarItem(
-                            selected = route == item.route,
-                            onClick = { navController.navigateTopLevel(item.route) },
-                            icon = { Icon(item.m3Icon, contentDescription = null) },
-                            label = { Text(stringResource(item.label)) },
-                        )
+    val content: @Composable () -> Unit = {
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbar) },
+            bottomBar = {
+                if (isTopLevel) {
+                    NavigationBar(containerColor = Color.Transparent) {
+                        topLevel.forEach { item ->
+                            NavigationBarItem(
+                                selected = route == item.route,
+                                onClick = { navController.navigateTopLevel(item.route) },
+                                icon = { Icon(item.m3Icon, contentDescription = null) },
+                                label = { Text(stringResource(item.label)) },
+                            )
+                        }
                     }
                 }
             }
-        },
-    ) { padding ->
-        NavHost(
-            navController,
-            startDestination = MainActivity.DESTINATION_HOME,
-            enterTransition = navEnterTransition,
-            exitTransition = navExitTransition,
-            popEnterTransition = navPopEnterTransition,
-            popExitTransition = navPopExitTransition,
-        ) {
-            composable(MainActivity.DESTINATION_HOME) {
-                HomeScreen(viewModel, navController, padding)
-            }
-            composable(MainActivity.DESTINATION_PATCHES) {
-                PatchesScreen(viewModel, padding)
-            }
-            composable(MainActivity.DESTINATION_SETTINGS) {
-                SettingsScreen(viewModel, padding)
-            }
-            composable(
-                "${MainActivity.DESTINATION_APP}/{packageName}",
-                arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-            ) { entry ->
-                AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+        ) { padding ->
+            NavHost(
+                navController,
+                startDestination = MainActivity.DESTINATION_HOME,
+                enterTransition = navEnterTransition,
+                exitTransition = navExitTransition,
+                popEnterTransition = navPopEnterTransition,
+                popExitTransition = navPopExitTransition,
+            ) {
+                composable(MainActivity.DESTINATION_HOME) {
+                    HomeScreen(viewModel, navController, padding)
+                }
+                composable(MainActivity.DESTINATION_PATCHES) {
+                    PatchesScreen(viewModel, padding)
+                }
+                composable(MainActivity.DESTINATION_SETTINGS) {
+                    SettingsScreen(viewModel, padding)
+                }
+                composable(
+                    "${MainActivity.DESTINATION_APP}/{packageName}",
+                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+                ) { entry ->
+                    AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
+                }
             }
         }
     }
+    content()
 }
 
 /**

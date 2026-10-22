@@ -73,6 +73,7 @@ jobs:
                   STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
                   KEY_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
                   ALIAS_PASSWORD: ${{ secrets.KEYSTORE_ALIAS_PASSWORD }}
+                  EXPECTED_CERT_SHA256: ${{ secrets.RELEASE_CERT_SHA256 }}
                   RELEASE_TAG: ${{ env.TAG }}
               run: |
                   set -euo pipefail
@@ -112,6 +113,27 @@ jobs:
                     -storepass "$STORE_PASSWORD" \
                     -alias "$KEY_ALIAS" >/dev/null
 
+                  if [[ -n "${EXPECTED_CERT_SHA256:-}" ]]; then
+                    actual_cert_sha256="$(keytool -list -v \
+                      -keystore key.jks \
+                      -storepass "$STORE_PASSWORD" \
+                      -alias "$KEY_ALIAS" |
+                      sed -n 's/^[[:space:]]*SHA256:[[:space:]]*//p' |
+                      tr -d ':' |
+                      tr '[:lower:]' '[:upper:]' |
+                      head -n1)"
+                    expected_cert_sha256="$(printf '%s' "$EXPECTED_CERT_SHA256" |
+                      tr -d ': ' |
+                      tr '[:lower:]' '[:upper:]')"
+                    if [[ "$actual_cert_sha256" != "$expected_cert_sha256" ]]; then
+                      echo "::error::Release certificate fingerprint does not match RELEASE_CERT_SHA256."
+                      exit 1
+                    fi
+                    echo "Release certificate fingerprint verified."
+                  else
+                    echo "::warning::RELEASE_CERT_SHA256 is not configured; certificate identity was not pinned."
+                  fi
+
                   echo "Keystore and alias verified."
 
             - name: Build module and patcher API
@@ -122,6 +144,9 @@ jobs:
                   ./gradlew \
                     :app:assembleRelease \
                     :patcher:publishAllPublicationsToReleaseRepository \
+                    --no-configuration-cache
+                  ./gradlew -p build-logic \
+                    publishAllPublicationsToReleaseRepository \
                     --no-configuration-cache
 
             - name: Generate release notes

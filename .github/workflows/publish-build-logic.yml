@@ -1,0 +1,66 @@
+name: Publish build logic
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/publish-build-logic.yml"
+      - "build-logic/**"
+      - "gradle.properties"
+      - "gradle/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-build-logic
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish nexalloy.bundle plugin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Publish build logic
+        run: ./gradlew -p build-logic publishAllPublicationsToReleaseRepository --no-configuration-cache
+      - name: Update Maven branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -d build/maven
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin maven || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/maven; then
+            git worktree add maven-repo origin/maven
+          else
+            git worktree add --detach maven-repo
+            git -C maven-repo checkout --orphan maven
+            git -C maven-repo rm -rfq . || true
+          fi
+
+          cp -r build/maven/. maven-repo/
+          git -C maven-repo add -A
+
+          if git -C maven-repo diff --cached --quiet; then
+            echo "Maven repository has no changes."
+            exit 0
+          fi
+
+          git -C maven-repo commit -m "Publish build logic from ${GITHUB_SHA::7}"
+          git -C maven-repo push origin HEAD:maven

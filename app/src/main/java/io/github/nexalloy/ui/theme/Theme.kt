@@ -49,6 +49,7 @@ val isMiuixStyle: Boolean
 data class NexAlloyThemeConfig(
     /** True while the official Miuix design system is active. */
     val isMiuix: Boolean = false,
+    val isDark: Boolean = false,
     val cardShape: RoundedCornerShape = RoundedCornerShape(16.dp),
     val cardBorder: BorderStroke? = null,
 )
@@ -66,8 +67,8 @@ fun nexAlloyCardColors(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
 ): CardColors {
-    val isMiuix = LocalNexAlloyThemeConfig.current.isMiuix
-    val actualContainer = if (isMiuix) {
+    val config = LocalNexAlloyThemeConfig.current
+    val actualContainer = if (config.isMiuix) {
         containerColor.copy(alpha = 0.82f)
     } else {
         containerColor
@@ -236,7 +237,12 @@ fun NexAlloyTheme(
         else -> systemDark
     }
 
-    val style = if (AppPreferenceNames.isMiuix(themeStyle)) ThemeStyle.MIUIX else ThemeStyle.MATERIAL3
+    val normalizedStyle = AppPreferenceNames.normalizeStyle(themeStyle)
+    val style = when (normalizedStyle) {
+        AppSettings.THEME_STYLE_MIUIX -> ThemeStyle.MIUIX
+        AppSettings.THEME_STYLE_MATERIAL3 -> ThemeStyle.MATERIAL3
+        else -> ThemeStyle.MIUIX
+    }
     val context = LocalContext.current
     val accent = schemeSeed(colorScheme)
 
@@ -262,6 +268,7 @@ fun NexAlloyTheme(
 
         val themeConfig = NexAlloyThemeConfig(
             isMiuix = true,
+            isDark = isDark,
             cardShape = RoundedCornerShape(22.dp),
             cardBorder = null,
         )
@@ -296,6 +303,7 @@ fun NexAlloyTheme(
 
         val themeConfig = NexAlloyThemeConfig(
             isMiuix = false,
+            isDark = isDark,
             cardShape = RoundedCornerShape(16.dp),
             cardBorder = null,
         )

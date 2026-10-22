@@ -89,6 +89,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.nexalloy.ui.theme.isMiuixStyle
+import io.github.nexalloy.ui.theme.LocalNexAlloyThemeConfig
 import io.github.nexalloy.ui.theme.nexAlloyCardBorder
 import io.github.nexalloy.ui.theme.nexAlloyCardShape
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
@@ -299,7 +300,9 @@ fun ThemedCard(
         MiuixCard(modifier = modifier, onClick = onClick) { content() }
     } else {
         Card(
-            colors = CardDefaults.cardColors(containerColor = containerColor),
+            colors = CardDefaults.cardColors(
+                containerColor = containerColor,
+            ),
             shape = nexAlloyCardShape(),
             border = nexAlloyCardBorder(),
             modifier = modifier,

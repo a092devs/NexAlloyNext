@@ -9,18 +9,17 @@ object AppPreferenceNames {
     const val THEME_LIGHT = "light"
     const val THEME_DARK = "dark"
 
-    /** Design system options: AndroidX Material 3 and the official Miuix library. */
+    /** Design system options: Material 3 and the official Miuix library. */
     const val THEME_STYLE_MATERIAL3 = "material3"
     const val THEME_STYLE_MIUIX = "miuix"
 
     /**
-     * Historical value of the Miuix style. Early builds stored "miuix_glass"; it is migrated on
-     * read so users keep their selected design system.
+     * Historical values are migrated on read so users keep their selected design system.
      */
     const val LEGACY_THEME_STYLE_MIUIX = "miuix_glass"
 
-    /** The Miuix floating navigation bar is opt-in and disabled by default. */
-    const val DEFAULT_FLOATING_NAVIGATION = false
+    /** The Miuix floating navigation bar is enabled by default. */
+    const val DEFAULT_FLOATING_NAVIGATION = true
 
     /**
      * Colour scheme options. "default" keeps each design system's own palette (platform dynamic
@@ -50,8 +49,9 @@ object AppPreferenceNames {
 
     /** Maps any stored theme-style value to a supported one. */
     fun normalizeStyle(raw: String?): String = when (raw) {
-        THEME_STYLE_MIUIX, LEGACY_THEME_STYLE_MIUIX -> THEME_STYLE_MIUIX
-        else -> THEME_STYLE_MATERIAL3
+        THEME_STYLE_MIUIX, LEGACY_THEME_STYLE_MIUIX, "glass" -> THEME_STYLE_MIUIX
+        THEME_STYLE_MATERIAL3 -> THEME_STYLE_MATERIAL3
+        else -> THEME_STYLE_MIUIX
     }
 
     /** Maps any stored colour-mode value to a supported one. */
