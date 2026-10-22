@@ -93,7 +93,6 @@ import io.github.nexalloy.ui.theme.LocalNexAlloyThemeConfig
 import io.github.nexalloy.ui.theme.nexAlloyCardBorder
 import io.github.nexalloy.ui.theme.nexAlloyCardShape
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
-import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.Checkbox as MiuixCheckbox
 import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.IconButton as MiuixIconButton
@@ -297,7 +296,7 @@ fun ThemedCard(
     content: @Composable () -> Unit,
 ) {
     if (isMiuixStyle) {
-        MiuixCard(modifier = modifier, onClick = onClick) { content() }
+        LiquidGlassCard(modifier = modifier, onClick = onClick, content = content)
     } else {
         Card(
             colors = CardDefaults.cardColors(
@@ -308,6 +307,36 @@ fun ThemedCard(
             modifier = modifier,
         ) { content() }
     }
+}
+
+@Composable
+fun LiquidGlassCard(
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    val dark = LocalNexAlloyThemeConfig.current.isDark
+    val shape = RoundedCornerShape(26.dp)
+    val colors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = if (dark) 0.54f else 0.62f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    )
+    val cardModifier = modifier
+        .clip(shape)
+        .then(
+            if (onClick == null) Modifier else Modifier.clickable(onClick = onClick),
+        )
+    Card(
+        modifier = cardModifier,
+        colors = colors,
+        shape = shape,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = if (dark) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.78f),
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        content = { content() },
+    )
 }
 
 /** Switch: the official Miuix switch or the Material 3 switch, matching the active theme. */

@@ -15,6 +15,14 @@ the release notes, falling back to generated commit notes when no section exists
 - Compatibility: Preserved existing navigation, patch toggles, bundle management, updater behavior,
   LSPosed integration, settings, and app lifecycle actions.
 
+## 3.4.1
+
+- Liquid Glass Hotfix: Refined the Miuix presentation with ambient gradient lighting, translucent
+  fallback surfaces, stronger glass highlights, and a more prominent floating navigation treatment
+  on devices without runtime shader blur support.
+- Compatibility: Kept all existing navigation, patching, updater, settings, and lifecycle behavior
+  unchanged.
+
 ## 3.3.2
 
 - Honest Process Lifecycle & Force-Stop Control: Distinguishes genuine root `am force-stop` execution from background process termination (`killBackgroundProcesses`), providing truthful status feedback without false success claims.
