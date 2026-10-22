@@ -68,6 +68,7 @@ class AppSettings(context: Context) {
 
         const val THEME_STYLE_MATERIAL3 = AppPreferenceNames.THEME_STYLE_MATERIAL3
         const val THEME_STYLE_MIUIX = AppPreferenceNames.THEME_STYLE_MIUIX
+
         const val COLOR_SCHEME_DEFAULT = AppPreferenceNames.COLOR_SCHEME_DEFAULT
     }
 }

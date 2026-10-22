@@ -71,6 +71,7 @@ import io.github.nexalloy.updates.AppInstaller
 import io.github.nexalloy.updates.AppRelease
 import io.github.nexalloy.updates.UpdateDownloadState
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -465,7 +466,7 @@ fun ActionCard(
     val actualContainer = if (isMiuix) containerColor.copy(alpha = 0.82f) else containerColor
 
     if (isMiuix) {
-        LiquidGlassCard(
+        MiuixCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 6.dp),

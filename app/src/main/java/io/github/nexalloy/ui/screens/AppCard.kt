@@ -56,6 +56,7 @@ import io.github.nexalloy.core.discovery.AppItemState
 import io.github.nexalloy.ui.theme.isMiuixStyle
 import io.github.nexalloy.ui.theme.nexAlloyCardBorder
 import io.github.nexalloy.ui.theme.nexAlloyCardShape
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 
 /** Backward-compatible version comparison function delegating to VersionComparator. */
 fun compareVersions(a: String, b: String): Int = VersionComparator.compare(a, b)
@@ -97,12 +98,14 @@ fun AppCard(
     val containerColor = if (isMiuix) baseContainer.copy(alpha = 0.82f) else baseContainer
 
     if (isMiuix) {
-        LiquidGlassCard(
+        MiuixCard(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 5.dp),
             onClick = onClick,
-        ) { AppCardDetails(app = app, icon = icon) }
+        ) {
+            AppCardDetails(app = app, icon = icon)
+        }
     } else {
         Card(
             modifier = modifier

@@ -35,6 +35,7 @@ import io.github.nexalloy.ui.ManagerViewModel
 import io.github.nexalloy.ui.theme.isMiuixStyle
 import io.github.nexalloy.updates.AppPreferenceNames
 import io.github.nexalloy.updates.AppSettings
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -105,7 +106,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             ) {
                 item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_updates)) }
                 item {
-                    LiquidGlassCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
                         SwitchPreference(
                             title = stringResource(R.string.setting_notify_app),
                             summary = stringResource(R.string.setting_notify_app_summary),
@@ -128,7 +129,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
 
                 item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_appearance)) }
                 item {
-                    LiquidGlassCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
                         ArrowPreference(
                             title = stringResource(R.string.theme_title),
                             summary = currentThemeLabel,
@@ -157,7 +158,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
 
                 item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_general)) }
                 item {
-                    LiquidGlassCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
                         SwitchPreference(
                             title = stringResource(R.string.hide_icon_title),
                             summary = stringResource(R.string.hide_icon_summary),
@@ -174,7 +175,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
 
                 item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_about)) }
                 item {
-                    LiquidGlassCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    MiuixCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
                         ArrowPreference(
                             title = "${stringResource(R.string.app_name)} ${BuildConfig.VERSION_NAME}",
                             summary = "${BuildConfig.COMMIT_HASH} ${BuildConfig.BUILD_TYPE} · ${DateUtils.getRelativeTimeSpanString(BuildConfig.COMMIT_DATE * 1000)}",

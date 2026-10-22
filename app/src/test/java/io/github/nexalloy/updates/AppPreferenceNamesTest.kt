@@ -25,11 +25,11 @@ class AppPreferenceNamesTest {
     }
 
     @Test
-    fun unknownStyleValuesFallBackToMiuix() {
-        assertEquals(AppPreferenceNames.THEME_STYLE_MIUIX, AppPreferenceNames.normalizeStyle(null))
-        assertEquals(AppPreferenceNames.THEME_STYLE_MIUIX, AppPreferenceNames.normalizeStyle(""))
-        assertEquals(AppPreferenceNames.THEME_STYLE_MIUIX, AppPreferenceNames.normalizeStyle("glass"))
-        assertEquals(AppPreferenceNames.THEME_STYLE_MIUIX, AppPreferenceNames.normalizeStyle("MIUIX"))
+    fun unknownStyleValuesFallBackToMaterial3() {
+        assertEquals(AppPreferenceNames.THEME_STYLE_MATERIAL3, AppPreferenceNames.normalizeStyle(null))
+        assertEquals(AppPreferenceNames.THEME_STYLE_MATERIAL3, AppPreferenceNames.normalizeStyle(""))
+        assertEquals(AppPreferenceNames.THEME_STYLE_MATERIAL3, AppPreferenceNames.normalizeStyle("glassmorphism"))
+        assertEquals(AppPreferenceNames.THEME_STYLE_MATERIAL3, AppPreferenceNames.normalizeStyle("MIUIX"))
     }
 
     @Test
@@ -51,12 +51,13 @@ class AppPreferenceNamesTest {
     fun isMiuixMatchesTheSelectedDesignSystem() {
         assertTrue(AppPreferenceNames.isMiuix("miuix"))
         assertFalse(AppPreferenceNames.isMiuix("material3"))
-        assertTrue(AppPreferenceNames.isMiuix(null))
+        assertFalse(AppPreferenceNames.isMiuix(null))
     }
 
     @Test
-    fun floatingNavigationDefaultsToEnabled() {
-        assertTrue(AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION)
+    fun floatingNavigationDefaultsToDisabled() {
+        // The floating navigation bar is opt-in: the default must stay false.
+        assertFalse(AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION)
     }
 
     @Test

@@ -5,23 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
-## 3.4.0
+## 3.4.2
 
-- Miuix Glass Manager: Made the existing Miuix design system the single glass-style experience,
-  including its blurred floating navigation bar, rounded surfaces, expressive transitions, and
-  adaptive dark mode.
-- Theme Controls: Preserved Material 3 and Miuix choices, plus system, light, and dark appearance
-  modes and existing accent palettes. Existing Liquid Glass selections migrate to Miuix.
-- Compatibility: Preserved existing navigation, patch toggles, bundle management, updater behavior,
-  LSPosed integration, settings, and app lifecycle actions.
-
-## 3.4.1
-
-- Liquid Glass Hotfix: Refined the Miuix presentation with ambient gradient lighting, translucent
-  fallback surfaces, stronger glass highlights, and a more prominent floating navigation treatment
-  on devices without runtime shader blur support.
-- Compatibility: Kept all existing navigation, patching, updater, settings, and lifecycle behavior
-  unchanged.
+- UI Rollback: Restored the stable manager presentation without the experimental Liquid Glass
+  redesign.
+- Compatibility: Preserved patching, updater, settings, navigation, and lifecycle behavior while
+  the visual redesign is revisited separately.
 
 ## 3.3.2
 

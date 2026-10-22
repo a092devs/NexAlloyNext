@@ -25,7 +25,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -64,7 +63,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -88,7 +86,6 @@ import io.github.nexalloy.ui.screens.HomeScreen
 import io.github.nexalloy.ui.screens.PatchesScreen
 import io.github.nexalloy.ui.screens.SettingsScreen
 import io.github.nexalloy.ui.theme.NexAlloyTheme
-import io.github.nexalloy.ui.theme.LocalNexAlloyThemeConfig
 import io.github.nexalloy.ui.theme.isMiuixStyle
 import io.github.nexalloy.updates.AppSettings
 import top.yukonga.miuix.kmp.basic.FloatingNavigationBar
@@ -130,6 +127,7 @@ class MainActivity : ComponentActivity() {
                 ManagerApp(
                     viewModel = viewModel,
                     requestedDestination = requestedDestination,
+                    floatingNavigation = state.floatingNavigation,
                 ) { requestedDestination = null }
             }
         }
@@ -198,6 +196,7 @@ private val navPopExitTransition: AnimatedContentTransitionScope<NavBackStackEnt
 private fun ManagerApp(
     viewModel: ManagerViewModel,
     requestedDestination: String?,
+    floatingNavigation: Boolean,
     onDestinationHandled: () -> Unit,
 ) {
     val navController = rememberNavController()
@@ -218,6 +217,7 @@ private fun ManagerApp(
             navController = navController,
             viewModel = viewModel,
             route = route,
+            floatingNavigation = floatingNavigation,
         )
     } else {
         Material3ManagerApp(
@@ -244,65 +244,63 @@ private fun Material3ManagerApp(
         viewModel.messages.collect { snackbar.showSnackbar(it) }
     }
 
-    val content: @Composable () -> Unit = {
-        Scaffold(
-            containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbar) },
-            bottomBar = {
-                if (isTopLevel) {
-                    NavigationBar(containerColor = Color.Transparent) {
-                        topLevel.forEach { item ->
-                            NavigationBarItem(
-                                selected = route == item.route,
-                                onClick = { navController.navigateTopLevel(item.route) },
-                                icon = { Icon(item.m3Icon, contentDescription = null) },
-                                label = { Text(stringResource(item.label)) },
-                            )
-                        }
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        bottomBar = {
+            if (isTopLevel) {
+                NavigationBar {
+                    topLevel.forEach { item ->
+                        NavigationBarItem(
+                            selected = route == item.route,
+                            onClick = { navController.navigateTopLevel(item.route) },
+                            icon = { Icon(item.m3Icon, contentDescription = null) },
+                            label = { Text(stringResource(item.label)) },
+                        )
                     }
                 }
             }
-        ) { padding ->
-            NavHost(
-                navController,
-                startDestination = MainActivity.DESTINATION_HOME,
-                enterTransition = navEnterTransition,
-                exitTransition = navExitTransition,
-                popEnterTransition = navPopEnterTransition,
-                popExitTransition = navPopExitTransition,
-            ) {
-                composable(MainActivity.DESTINATION_HOME) {
-                    HomeScreen(viewModel, navController, padding)
-                }
-                composable(MainActivity.DESTINATION_PATCHES) {
-                    PatchesScreen(viewModel, padding)
-                }
-                composable(MainActivity.DESTINATION_SETTINGS) {
-                    SettingsScreen(viewModel, padding)
-                }
-                composable(
-                    "${MainActivity.DESTINATION_APP}/{packageName}",
-                    arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
-                ) { entry ->
-                    AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
-                }
+        },
+    ) { padding ->
+        NavHost(
+            navController,
+            startDestination = MainActivity.DESTINATION_HOME,
+            enterTransition = navEnterTransition,
+            exitTransition = navExitTransition,
+            popEnterTransition = navPopEnterTransition,
+            popExitTransition = navPopExitTransition,
+        ) {
+            composable(MainActivity.DESTINATION_HOME) {
+                HomeScreen(viewModel, navController, padding)
+            }
+            composable(MainActivity.DESTINATION_PATCHES) {
+                PatchesScreen(viewModel, padding)
+            }
+            composable(MainActivity.DESTINATION_SETTINGS) {
+                SettingsScreen(viewModel, padding)
+            }
+            composable(
+                "${MainActivity.DESTINATION_APP}/{packageName}",
+                arguments = listOf(navArgument("packageName") { type = NavType.StringType }),
+            ) { entry ->
+                AppPatchesScreen(viewModel, entry.arguments!!.getString("packageName")!!, navController)
             }
         }
     }
-    content()
 }
 
 /**
  * Official Miuix (Xiaomi HyperOS) presentation.
  *
- * Miuix uses the floating navigation bar as its glass presentation. Blur is used when the runtime
- * shader check passes, with a translucent highlighted fallback otherwise.
+ * The floating navigation bar is an opt-in preference and disabled by default; the standard
+ * Miuix [NavigationBar] is the default arrangement. Blur is only used when the runtime shader
+ * support check passes, with an opaque surface fallback otherwise.
  */
 @Composable
 private fun MiuixManagerApp(
     navController: NavHostController,
     viewModel: ManagerViewModel,
     route: String?,
+    floatingNavigation: Boolean,
 ) {
     val isTopLevel = topLevel.any { it.route == route }
 
@@ -324,17 +322,13 @@ private fun MiuixManagerApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    if (isDark) {
-                        listOf(Color(0xFF101827), Color(0xFF1E1A32), Color(0xFF102432))
-                    } else {
-                        listOf(Color(0xFFEAF2FF), Color(0xFFF5ECFF), Color(0xFFE8F8F5))
-                    },
-                ),
-            ),
+            .background(MiuixTheme.colorScheme.background),
     ) {
-        MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
+        if (floatingNavigation) {
+            MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
+        } else {
+            MiuixStandardNavigationApp(navController, viewModel, route, isTopLevel, snackbar)
+        }
     }
 }
 
@@ -407,8 +401,8 @@ private fun MiuixStandardNavigationApp(
 }
 
 /**
- * Floating navigation bar with an official blur backdrop when runtime shader support is available,
- * and a translucent highlighted fallback otherwise.
+ * Opt-in floating navigation bar with an official blur backdrop when runtime shader support is
+ * available, and an opaque surface otherwise.
  */
 @Composable
 private fun MiuixFloatingNavigationApp(
@@ -437,11 +431,7 @@ private fun MiuixFloatingNavigationApp(
     val blurActive = backdrop != null
 
     val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
-    val floatingBarColor = if (blurActive) {
-        Color.Transparent
-    } else {
-        MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.74f)
-    }
+    val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
     val floatingHighlight = remember(isDark) {
         if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight
     }
@@ -504,12 +494,6 @@ private fun MiuixFloatingNavigationApp(
                         )
                     } else {
                         Modifier
-                            .background(floatingBarColor, floatingBarShape)
-                            .border(
-                                width = 1.dp,
-                                color = if (isDark) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.72f),
-                                shape = floatingBarShape,
-                            )
                     },
                     color = floatingBarColor,
                     horizontalAlignment = Alignment.CenterHorizontally,

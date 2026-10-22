@@ -61,6 +61,7 @@ import io.github.nexalloy.patchPreferenceKey
 import io.github.nexalloy.ui.BundlePatches
 import io.github.nexalloy.ui.ManagerViewModel
 import io.github.nexalloy.ui.theme.isMiuixStyle
+import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
@@ -360,7 +361,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
 
                             if (isMiuix) {
                                 item(key = "${group.bundle.id}_card") {
-                                    LiquidGlassCard(
+                                    MiuixCard(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = 16.dp, vertical = 4.dp),
