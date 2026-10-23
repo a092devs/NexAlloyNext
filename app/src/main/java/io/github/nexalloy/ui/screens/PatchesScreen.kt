@@ -36,6 +36,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
@@ -54,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -396,8 +398,8 @@ private fun SourceCard(
         Column(Modifier.padding(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    FlowRow(
+                        verticalArrangement = Arrangement.Center,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
@@ -413,6 +415,8 @@ private fun SourceCard(
                                 "Pre-release",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.secondary,
+                                maxLines = 1,
+                                softWrap = false,
                             )
                         }
                     }
@@ -437,18 +441,37 @@ private fun SourceCard(
             Spacer(Modifier.height(8.dp))
 
             // Refresh status & relative time
+            val downloadProgress = state.sourceDownloadProgress[source.id]
+            val statusText = when {
+                downloadProgress != null -> {
+                    if (downloadProgress.isInstalling) {
+                        stringResource(R.string.source_installing)
+                    } else if (downloadProgress.progress >= 0f) {
+                        val pct = (downloadProgress.progress * 100).toInt()
+                        if (downloadProgress.totalBundles > 1) {
+                            "Downloading (${downloadProgress.bundleIndex}/${downloadProgress.totalBundles}) ${downloadProgress.bundleName}: $pct%"
+                        } else {
+                            "Downloading update... $pct%"
+                        }
+                    } else {
+                        if (downloadProgress.totalBundles > 1) {
+                            "Downloading (${downloadProgress.bundleIndex}/${downloadProgress.totalBundles}) ${downloadProgress.bundleName}..."
+                        } else {
+                            "Downloading update..."
+                        }
+                    }
+                }
+                busy -> stringResource(R.string.source_installing)
+                release == null -> stringResource(R.string.source_checking)
+                release.isFailure -> stringResource(R.string.source_error, release.exceptionOrNull()?.message.orEmpty())
+                source.installedVersion == null -> stringResource(R.string.source_available, release.getOrThrow().version)
+                hasUpdate -> stringResource(R.string.source_update_available, source.installedVersion.orEmpty(), release.getOrThrow().version)
+                else -> stringResource(R.string.source_up_to_date, source.installedVersion.orEmpty())
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                val statusText = when {
-                    busy -> stringResource(R.string.source_installing)
-                    release == null -> stringResource(R.string.source_checking)
-                    release.isFailure -> stringResource(R.string.source_error, release.exceptionOrNull()?.message.orEmpty())
-                    source.installedVersion == null -> stringResource(R.string.source_available, release.getOrThrow().version)
-                    hasUpdate -> stringResource(R.string.source_update_available, source.installedVersion.orEmpty(), release.getOrThrow().version)
-                    else -> stringResource(R.string.source_up_to_date, source.installedVersion.orEmpty())
-                }
                 Text(
                     statusText,
                     style = MaterialTheme.typography.bodyMedium,
@@ -460,6 +483,28 @@ private fun SourceCard(
                         stringResource(R.string.last_refreshed, formatRelativeTime(source.lastRefreshTime)),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline,
+                        maxLines = 1,
+                        softWrap = false,
+                    )
+                }
+            }
+
+            if (downloadProgress != null && !downloadProgress.isInstalling) {
+                Spacer(Modifier.height(6.dp))
+                if (downloadProgress.progress >= 0f) {
+                    LinearProgressIndicator(
+                        progress = { downloadProgress.progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp)),
                     )
                 }
             }
@@ -583,6 +628,8 @@ private fun ProvenanceBadge(provenance: SourceProvenance) {
         text = label,
         style = MaterialTheme.typography.labelSmall,
         color = fg,
+        maxLines = 1,
+        softWrap = false,
         modifier = Modifier
             .background(bg, RoundedCornerShape(4.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp),

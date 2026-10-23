@@ -76,17 +76,25 @@ class BundleManager(private val context: Context, private val service: XposedSer
     }
 
     /** Installs or updates a bundle. Blocking; call off the main thread. */
-    fun install(input: InputStream, sourceId: String?): InstalledBundle {
+    fun install(
+        input: InputStream,
+        sourceId: String?,
+        totalBytes: Long = -1L,
+        onProgress: ((downloaded: Long, total: Long) -> Unit)? = null,
+    ): InstalledBundle {
         val tmp = File.createTempFile("bundle", ".apk", context.cacheDir)
         try {
             val digest = MessageDigest.getInstance("SHA-256")
             tmp.outputStream().use { output ->
                 val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                var downloaded = 0L
                 while (true) {
                     val read = input.read(buffer)
                     if (read < 0) break
                     digest.update(buffer, 0, read)
                     output.write(buffer, 0, read)
+                    downloaded += read
+                    onProgress?.invoke(downloaded, totalBytes)
                 }
             }
             val hash = digest.digest().joinToString("") { "%02x".format(it) }.take(16)

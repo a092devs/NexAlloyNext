@@ -45,6 +45,16 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import java.io.File
 
+data class SourceDownloadProgress(
+    val bundleName: String,
+    val bundleIndex: Int,
+    val totalBundles: Int,
+    val progress: Float, // 0f..1f, or -1f if indeterminate
+    val bytesDownloaded: Long,
+    val totalBytes: Long,
+    val isInstalling: Boolean = false,
+)
+
 data class ManagerState(
     /** The Xposed service, null while the module is not active. */
     val service: XposedService? = null,
@@ -56,6 +66,8 @@ data class ManagerState(
     val releases: Map<String, Result<SourceRelease>> = emptyMap(),
     /** Sources currently performing an install/download operation. */
     val busySources: Set<String> = emptySet(),
+    /** Live download progress per source id. */
+    val sourceDownloadProgress: Map<String, SourceDownloadProgress> = emptyMap(),
     /** Installed apps patched by enabled bundles that are missing from the module scope. */
     val missingScope: List<String> = emptyList(),
     val appUpdate: AppRelease? = null,
@@ -356,15 +368,74 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             val result = withContext(Dispatchers.IO) {
                 runCatching {
                     val release = _state.value.releases[source.id]?.getOrNull() ?: SourceClient.latestRelease(source)
-                    val bundles = release.bundles.map { (_, url) ->
-                        SourceClient.open(url).inputStream.use { mgr.install(it, source.id) }
+                    val totalBundles = release.bundles.size
+                    val bundles = release.bundles.mapIndexed { index, (bundleName, url) ->
+                        val connection = SourceClient.open(url)
+                        val totalBytes = connection.contentLengthLong
+                        _state.update {
+                            it.copy(
+                                sourceDownloadProgress = it.sourceDownloadProgress + (source.id to SourceDownloadProgress(
+                                    bundleName = bundleName,
+                                    bundleIndex = index + 1,
+                                    totalBundles = totalBundles,
+                                    progress = if (totalBytes > 0) 0f else -1f,
+                                    bytesDownloaded = 0L,
+                                    totalBytes = totalBytes,
+                                    isInstalling = false,
+                                ))
+                            )
+                        }
+                        var lastReportedPct = -1
+                        var lastReportedTime = 0L
+                        connection.inputStream.use { stream ->
+                            mgr.install(stream, source.id, totalBytes) { downloaded, total ->
+                                val pct = if (total > 0) (downloaded.toFloat() / total).coerceIn(0f, 1f) else -1f
+                                val pctInt = if (pct >= 0f) (pct * 100).toInt() else -1
+                                val now = System.currentTimeMillis()
+                                if (pctInt != lastReportedPct || now - lastReportedTime > 100L || downloaded == total) {
+                                    lastReportedPct = pctInt
+                                    lastReportedTime = now
+                                    _state.update {
+                                        it.copy(
+                                            sourceDownloadProgress = it.sourceDownloadProgress + (source.id to SourceDownloadProgress(
+                                                bundleName = bundleName,
+                                                bundleIndex = index + 1,
+                                                totalBundles = totalBundles,
+                                                progress = pct,
+                                                bytesDownloaded = downloaded,
+                                                totalBytes = total,
+                                                isInstalling = false,
+                                            ))
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    _state.update {
+                        it.copy(
+                            sourceDownloadProgress = it.sourceDownloadProgress + (source.id to SourceDownloadProgress(
+                                bundleName = "",
+                                bundleIndex = totalBundles,
+                                totalBundles = totalBundles,
+                                progress = 1f,
+                                bytesDownloaded = 0L,
+                                totalBytes = 0L,
+                                isInstalling = true,
+                            ))
+                        )
                     }
                     releaseCache.put(source.id, release)
                     store.save(source.copy(installedVersion = release.version, lastRefreshTime = System.currentTimeMillis(), lastError = null))
                     release to bundles
                 }
             }
-            _state.update { it.copy(busySources = it.busySources - source.id) }
+            _state.update {
+                it.copy(
+                    busySources = it.busySources - source.id,
+                    sourceDownloadProgress = it.sourceDownloadProgress - source.id,
+                )
+            }
             result.onSuccess { (release, bundles) ->
                 _state.update { it.copy(releases = it.releases + (source.id to Result.success(release)), sources = store.all()) }
                 message(R.string.bundles_installed, bundles.joinToString { "${it.name} ${it.version}" })

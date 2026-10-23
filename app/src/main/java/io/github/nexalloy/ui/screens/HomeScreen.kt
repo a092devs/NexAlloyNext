@@ -196,11 +196,31 @@ fun HomeContent(
                 val updates = state.sourcesWithUpdates
                 if (updates.isNotEmpty() && state.isActive) {
                     item {
+                        val isDownloadingPatches = state.sourceDownloadProgress.isNotEmpty()
+                        val activeProgress = state.sourceDownloadProgress.values.firstOrNull()
+                        val primaryLabel = when {
+                            activeProgress != null && activeProgress.isInstalling -> stringResource(R.string.source_installing)
+                            activeProgress != null && activeProgress.progress >= 0f -> {
+                                val pct = (activeProgress.progress * 100).toInt()
+                                if (activeProgress.totalBundles > 1) {
+                                    "Downloading (${activeProgress.bundleIndex}/${activeProgress.totalBundles})... $pct%"
+                                } else {
+                                    "Downloading update... $pct%"
+                                }
+                            }
+                            activeProgress != null -> "Downloading..."
+                            state.busySources.isNotEmpty() -> stringResource(R.string.source_installing)
+                            else -> stringResource(R.string.action_update_all)
+                        }
+                        val primaryAction = if (isDownloadingPatches || state.busySources.isNotEmpty()) {
+                            {}
+                        } else onUpdateAll
+
                         ActionCard(
                             icon = Icons.Filled.Notifications,
                             title = stringResource(R.string.patch_updates_title),
                             text = updates.joinToString { "${it.name} ${state.releases[it.id]?.getOrNull()?.version}" },
-                            primary = stringResource(R.string.action_update_all) to onUpdateAll,
+                            primary = primaryLabel to primaryAction,
                             secondary = stringResource(R.string.nav_patches) to onOpenPatches,
                         )
                     }

@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.4.5
+
+- Patch Download Progress: Added real-time download progress tracking (streaming byte counts, percentage, and progress bar) during patch bundle installations and updates in both PatchesScreen and the HomeScreen updates banner.
+- Responsive Card Header: Modernized patch source card header layout with adaptive FlowRow wrapping and constrained provenance badges (softWrap = false, maxLines = 1), preventing badges from wrapping into vertical single-character columns on narrow screens or enlarged system font scales.
+- Performance & State Throttling: Throttled download progress state updates to 100ms intervals to eliminate unnecessary recompositions during fast downloads.
+
 ## 3.4.4
 
 - Navigation Pill & Layout Geometry Fix: Restored exact bounds on MiuixFloatingNavItem and selection indicators, preventing the navigation pill from expanding across the entire display.
