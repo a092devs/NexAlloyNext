@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.4.4
+
+- Navigation Pill & Layout Geometry Fix: Restored exact bounds on MiuixFloatingNavItem and selection indicators, preventing the navigation pill from expanding across the entire display.
+- Window Inset Alignment: Removed root-level navigation bar insets so MIUIX's built-in floating bar padding aligns cleanly with system gestures.
+- Rate-Limit Resilient Update Checker: Added transparent fallback to GitHub Atom feeds and expanded assets when pi.github.com encounters unauthenticated IP rate limits (HTTP 403), ensuring in-app update checks succeed reliably on all mobile networks.
 ## 3.4.3
 
 - Responsive UI Layout & Font Scaling: Applied content-proportional height constraints (`heightIn(min = ...)`) across buttons, segmented tabs, search inputs, and navigation items, preventing label clipping and text overflow at high system font scales.

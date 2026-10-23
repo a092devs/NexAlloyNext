@@ -299,11 +299,30 @@ object SourceClient {
     }
 
     private fun latestGitHubRelease(repository: String, prerelease: Boolean): SourceRelease {
-        val response = runCatching {
+        val apiResponse = runCatching {
             get("https://api.github.com/repos/$repository/releases?per_page=20")
-        }.getOrElse { error ->
-            throw SourceException("Failed to fetch releases from $repository: ${error.message}")
         }
+        if (apiResponse.isSuccess) {
+            val result = runCatching { parseGitHubReleasesJson(apiResponse.getOrThrow(), repository, prerelease) }
+            if (result.isSuccess && result.getOrNull() != null) {
+                return result.getOrThrow()!!
+            }
+        }
+
+        // Fallback: parse releases.atom and expanded_assets directly from github.com (immune to API rate limits)
+        val fallbackResult = runCatching {
+            fallbackFromAtom(repository, prerelease)
+        }
+        if (fallbackResult.isSuccess && fallbackResult.getOrNull() != null) {
+            return fallbackResult.getOrThrow()!!
+        }
+
+        val primaryError = apiResponse.exceptionOrNull()
+        val fallbackError = fallbackResult.exceptionOrNull()
+        throw SourceException("Failed to fetch releases from $repository: ${primaryError?.message ?: fallbackError?.message}")
+    }
+
+    private fun parseGitHubReleasesJson(response: String, repository: String, prerelease: Boolean): SourceRelease? {
         val releases = JSONArray(response)
         val candidates = (0 until releases.length()).map { releases.getJSONObject(it) }
             .filter { !it.optBoolean("draft") }
@@ -315,7 +334,7 @@ object SourceClient {
             }
         // Without a stable release, fall back to pre-releases, e.g. for projects still in alpha.
         val allowPrerelease = prerelease || candidates.none { !it.optBoolean("prerelease") }
-        val compatibleCandidates = candidates.filter { isReleaseCompatible(it, BuildConfig.VERSION_NAME) }
+        val compatibleCandidates = candidates.filter { isReleaseCompatible(it.optString("body", ""), it.optString("tag_name", ""), BuildConfig.VERSION_NAME) }
         val effectiveCandidates = compatibleCandidates.ifEmpty { candidates }
 
         for (release in effectiveCandidates) {
@@ -333,15 +352,67 @@ object SourceClient {
                 bundles = bundles,
             )
         }
-        throw SourceException("No compatible release of $repository contains a $BUNDLE_EXTENSION patch bundle")
+        return null
     }
 
-    private fun isReleaseCompatible(release: JSONObject, managerVersion: String): Boolean {
+    private fun fallbackFromAtom(repository: String, prerelease: Boolean): SourceRelease? {
+        val atomXml = get("https://github.com/$repository/releases.atom")
+        val entryRegex = Regex("""<entry>([\s\S]*?)</entry>""")
+        val titleRegex = Regex("""<title>([^<]+)</title>""")
+        val linkRegex = Regex("""<link[^>]*href="([^"]+)"""")
+        val contentRegex = Regex("""<content[^>]*>([\s\S]*?)</content>""")
+
+        data class AtomCandidate(val tag: String, val body: String, val pageUrl: String, val isPrerelease: Boolean)
+
+        val candidates = entryRegex.findAll(atomXml).mapNotNull { match ->
+            val block = match.groupValues[1]
+            val link = linkRegex.find(block)?.groupValues?.get(1).orEmpty()
+            val tag = link.substringAfterLast("/releases/tag/", "").takeIf { it.isNotEmpty() }
+                ?: titleRegex.find(block)?.groupValues?.get(1)?.trim().orEmpty()
+            if (tag.isEmpty() || VersionComparator.compare(tag, "0.0.0") <= 0) return@mapNotNull null
+            val content = contentRegex.find(block)?.groupValues?.get(1).orEmpty()
+            val isPre = tag.contains('-') || tag == "autobuild"
+            AtomCandidate(tag, content, link, isPre)
+        }.sortedWith { a, b ->
+            VersionComparator.compare(b.tag, a.tag)
+        }.toList()
+
+        val allowPrerelease = prerelease || candidates.none { !it.isPrerelease }
+        val compatibleCandidates = candidates.filter { isReleaseCompatible(it.body, it.tag, BuildConfig.VERSION_NAME) }
+        val effectiveCandidates = compatibleCandidates.ifEmpty { candidates }
+
+        for (candidate in effectiveCandidates) {
+            if (candidate.isPrerelease && !allowPrerelease) continue
+            val expandedAssets = runCatching {
+                get("https://github.com/$repository/releases/expanded_assets/${candidate.tag}")
+            }.getOrNull() ?: continue
+
+            val rawBundles = Regex("""href="(/[^"]+/releases/download/[^"]+?\.nxb)"""").findAll(expandedAssets)
+                .map { match ->
+                    val url = "https://github.com" + match.groupValues[1]
+                    val name = url.substringAfterLast('/')
+                    name to url
+                }.toList()
+
+            val bundles = deduplicateBundleAssets(rawBundles)
+            if (bundles.isEmpty()) continue
+
+            return SourceRelease(
+                version = candidate.tag,
+                changelog = candidate.body,
+                pageUrl = candidate.pageUrl,
+                bundles = bundles,
+            )
+        }
+        return null
+    }
+
+    private fun isReleaseCompatible(release: JSONObject, managerVersion: String): Boolean =
+        isReleaseCompatible(release.optString("body", ""), release.optString("tag_name", ""), managerVersion)
+
+    private fun isReleaseCompatible(body: String, tagName: String, managerVersion: String): Boolean {
         val cleanManager = managerVersion.trim().removePrefix("v").removePrefix("V").trim()
         val managerSeries = cleanManager.split('.').take(2).joinToString(".")
-
-        val body = release.optString("body", "")
-        val tagName = release.optString("tag_name", "").trim().removePrefix("v").removePrefix("V").trim()
 
         // 1. Explicit metadata in release notes
         val minManagerMatch = Regex("""(?:min[-_]manager(?:[-_]version)?|compatible[-_]manager)\s*[:=]\s*([0-9.]+)""", RegexOption.IGNORE_CASE)
@@ -359,7 +430,8 @@ object SourceClient {
 
         // 2. Coordinated versioning convention:
         // If release tag follows semantic versioning X.Y.Z, check if it targets a higher manager series
-        val tagSegments = tagName.split('.')
+        val cleanTag = tagName.trim().removePrefix("v").removePrefix("V").trim()
+        val tagSegments = cleanTag.split('.')
         if (tagSegments.size >= 3 && tagSegments.all { it.takeWhile { c -> c.isDigit() }.isNotEmpty() }) {
             val tagSeries = tagSegments.take(2).joinToString(".")
             if (VersionComparator.compare(tagSeries, managerSeries) > 0) {

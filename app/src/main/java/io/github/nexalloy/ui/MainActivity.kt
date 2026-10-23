@@ -329,12 +329,7 @@ private fun MiuixManagerApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiuixTheme.colorScheme.background)
-            // The Miuix presentation paints its own page and hosts its own navigation bars, so it
-            // must also consume the gesture-inset and IME space itself: without this, rows sit
-            // under the gesture bar and the keyboard covers focused search fields.
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .imePadding(),
+            .background(MiuixTheme.colorScheme.background),
     ) {
         if (floatingNavigation) {
             MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
@@ -581,10 +576,7 @@ private fun MiuixFloatingNavItem(
 
     Box(
         modifier = Modifier
-            // Comfortable touch target; scaled labels grow the item instead of clipping
-            // (fixed dp boxes clipped 11sp labels at high font scale / large-screen density).
-            .widthIn(min = FloatingItemWidth)
-            .heightIn(min = FloatingItemHeight)
+            .size(width = FloatingItemWidth, height = FloatingItemHeight)
             .clip(RoundedCornerShape(17.dp))
             .selectable(
                 selected = selected,
@@ -598,8 +590,7 @@ private fun MiuixFloatingNavItem(
         if (pillAlpha > 0f) {
             Box(
                 modifier = Modifier
-                    .matchParentSize()
-                    .padding(6.dp)
+                    .size(width = FloatingItemWidth - 12.dp, height = FloatingItemHeight - 12.dp)
                     .clip(RoundedCornerShape(percent = 50))
                     .background(indicatorColor.copy(alpha = indicatorColor.alpha * pillAlpha)),
             )
