@@ -209,7 +209,7 @@ fun HomeContent(
                                 }
                             }
                             activeProgress != null -> "Downloading..."
-                            state.busySources.isNotEmpty() -> stringResource(R.string.source_installing)
+                            state.busySources.isNotEmpty() -> "Downloading..."
                             else -> stringResource(R.string.action_update_all)
                         }
                         val primaryAction = if (isDownloadingPatches || state.busySources.isNotEmpty()) {

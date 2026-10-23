@@ -396,11 +396,12 @@ private fun SourceCard(
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         Column(Modifier.padding(18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
                     FlowRow(
                         verticalArrangement = Arrangement.Center,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
                             source.name,
@@ -420,6 +421,7 @@ private fun SourceCard(
                             )
                         }
                     }
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         source.url,
                         style = MaterialTheme.typography.bodySmall,
@@ -431,7 +433,7 @@ private fun SourceCard(
                 ThemedSwitch(
                     checked = source.enabled,
                     onCheckedChange = onEnabledChange,
-                    modifier = Modifier.padding(end = 4.dp),
+                    modifier = Modifier.padding(start = 8.dp, end = 4.dp),
                 )
                 ThemedIconButton(onClick = onRemove) {
                     Icon(icons.delete, contentDescription = stringResource(R.string.action_remove))
@@ -454,14 +456,14 @@ private fun SourceCard(
                             "Downloading update... $pct%"
                         }
                     } else {
-                        if (downloadProgress.totalBundles > 1) {
-                            "Downloading (${downloadProgress.bundleIndex}/${downloadProgress.totalBundles}) ${downloadProgress.bundleName}..."
+                        if (downloadProgress.bundleName.isNotBlank()) {
+                            "Downloading ${downloadProgress.bundleName}..."
                         } else {
                             "Downloading update..."
                         }
                     }
                 }
-                busy -> stringResource(R.string.source_installing)
+                busy -> "Downloading update..."
                 release == null -> stringResource(R.string.source_checking)
                 release.isFailure -> stringResource(R.string.source_error, release.exceptionOrNull()?.message.orEmpty())
                 source.installedVersion == null -> stringResource(R.string.source_available, release.getOrThrow().version)
@@ -489,9 +491,9 @@ private fun SourceCard(
                 }
             }
 
-            if (downloadProgress != null && !downloadProgress.isInstalling) {
+            if ((downloadProgress != null && !downloadProgress.isInstalling) || (busy && downloadProgress == null)) {
                 Spacer(Modifier.height(6.dp))
-                if (downloadProgress.progress >= 0f) {
+                if (downloadProgress != null && downloadProgress.progress >= 0f) {
                     LinearProgressIndicator(
                         progress = { downloadProgress.progress },
                         modifier = Modifier
@@ -624,16 +626,20 @@ private fun ProvenanceBadge(provenance: SourceProvenance) {
         )
     }
 
-    Text(
-        text = label,
-        style = MaterialTheme.typography.labelSmall,
-        color = fg,
-        maxLines = 1,
-        softWrap = false,
+    Box(
         modifier = Modifier
-            .background(bg, RoundedCornerShape(4.dp))
+            .clip(RoundedCornerShape(4.dp))
+            .background(bg)
             .padding(horizontal = 6.dp, vertical = 2.dp),
-    )
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = fg,
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

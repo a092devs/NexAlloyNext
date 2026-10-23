@@ -362,7 +362,20 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
 
     fun install(source: PatchSource) {
         val mgr = manager
-        _state.update { it.copy(busySources = it.busySources + source.id) }
+        _state.update {
+            it.copy(
+                busySources = it.busySources + source.id,
+                sourceDownloadProgress = it.sourceDownloadProgress + (source.id to SourceDownloadProgress(
+                    bundleName = "",
+                    bundleIndex = 1,
+                    totalBundles = 1,
+                    progress = -1f,
+                    bytesDownloaded = 0L,
+                    totalBytes = 0L,
+                    isInstalling = false,
+                ))
+            )
+        }
         val before = mgr.installed
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {

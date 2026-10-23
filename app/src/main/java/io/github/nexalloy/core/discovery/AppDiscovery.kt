@@ -103,23 +103,30 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.google.android.youtube",
             appName = "YouTube",
-            defaultBundleName = "NexAlloy Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0xFF0033,
-            targets = listOf(AppTarget("21.41.38"), AppTarget("21.40.38"), AppTarget("21.39.40")),
+            targets = listOf(
+                AppTarget("21.42.243"),
+                AppTarget("21.41.525"),
+                AppTarget("21.40.161"),
+                AppTarget("21.39.522"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.google.android.apps.youtube.music",
             appName = "YouTube Music",
-            defaultBundleName = "NexAlloy Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0xFF0000,
             targets = listOf(AppTarget("9.33.00")),
         ),
         KnownSupportedApp(
             packageName = "com.reddit.frontpage",
             appName = "Reddit",
-            defaultBundleName = "NexAlloy Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0xFF4500,
             targets = listOf(
+                AppTarget("2026.42.0"),
+                AppTarget("2026.41.0"),
                 AppTarget("2026.38.0"),
                 AppTarget("2026.37.0"),
                 AppTarget("2026.36.0"),
@@ -130,7 +137,7 @@ object AppDiscovery {
         KnownSupportedApp(
             packageName = "com.google.android.apps.photos",
             appName = "Google Photos",
-            defaultBundleName = "NexAlloy Patches",
+            defaultBundleName = "NexFusion Patches",
             appIconColor = 0x4285F4,
         ),
         KnownSupportedApp(
@@ -139,6 +146,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x6D4AFF,
             targets = listOf(
+                AppTarget("5.20.98.0"),
                 AppTarget("5.20.74.0"),
                 AppTarget("5.20.57.0"),
                 AppTarget("5.20.39.0"),
@@ -151,7 +159,11 @@ object AppDiscovery {
             appName = "Gboard",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x4285F4,
-            targets = listOf(AppTarget("18.4.1.985164140-beta-arm64-v8a")),
+            targets = listOf(
+                AppTarget("18.4.1.985164140-release-arm64-v8a"),
+                AppTarget("18.4.1.985164140-beta-arm64-v8a"),
+                AppTarget("18.3.1.977415014-release-arm64-v8a"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.google.android.gm",
@@ -170,21 +182,37 @@ object AppDiscovery {
             appName = "Facebook",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0866FF,
-            targets = listOf(AppTarget("582.0.0.50.54"), AppTarget("581.0.0.45.54")),
+            targets = listOf(
+                AppTarget("583.0.0.39.55"),
+                AppTarget("582.0.0.50.54"),
+                AppTarget("581.0.0.45.54"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.discord",
             appName = "Discord",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x5865F2,
-            targets = listOf(AppTarget("348.10")),
+            targets = listOf(
+                AppTarget("350.8 - Stable"),
+                AppTarget("350.8"),
+                AppTarget("349.9 - Stable"),
+                AppTarget("349.9"),
+                AppTarget("348.10"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.linkedin.android",
             appName = "LinkedIn",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0A66C2,
-            targets = listOf(AppTarget("4.1.1261"), AppTarget("4.1.1259"), AppTarget("4.1.1255.1")),
+            targets = listOf(
+                AppTarget("4.1.1264"),
+                AppTarget("4.1.1263"),
+                AppTarget("4.1.1261"),
+                AppTarget("4.1.1259"),
+                AppTarget("4.1.1255.1"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.mixplorer",
@@ -204,6 +232,8 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0xE1306C,
             targets = listOf(
+                AppTarget("452.1.0.53.64"),
+                AppTarget("452.0.0.48.64"),
                 AppTarget("451.0.0.53.80"),
                 AppTarget("450.0.0.46.79"),
                 AppTarget("447.0.0.55.81"),
@@ -214,7 +244,10 @@ object AppDiscovery {
             appName = "X",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x000000,
-            targets = listOf(AppTarget("12.35.0-prod.01")),
+            targets = listOf(
+                AppTarget("12.36.1-prod.01"),
+                AppTarget("12.35.0-prod.01"),
+            ),
         ),
     )
 
