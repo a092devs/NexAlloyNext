@@ -128,7 +128,7 @@ cd NexAlloyNext
 
 - [2eno/NexAlloyNext](https://github.com/2eno/NexAlloyNext): The upstream project this repository is built upon; its consolidated history forms the base of this repository
 - [compose-miuix-ui](https://github.com/compose-miuix-ui/miuix): Official Compose Multiplatform implementation of the MIUI / HyperOS design language by YuKongA
-- [NexAlloy](https://github.com/NexAlloy/NexAlloy): The foundational LSPosed patcher concept by ChsBuffer
+- [NexAlloy](https://github.com/NexAlloy/NexAlloy): The foundational LSPosed patcher concept by a092devs
 - [DexKit](https://luckypray.org/DexKit/en/): High-performance Dex runtime analysis library
 - [LSPosed](https://github.com/LSPosed/LSPosed): ART hooking framework and libxposed API 101
 - [Morphe](https://morphe.software): Fingerprint API inspiration and bytecode hook specifications
