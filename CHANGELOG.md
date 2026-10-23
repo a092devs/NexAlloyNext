@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.4.3
+
+- Responsive UI Layout & Font Scaling: Applied content-proportional height constraints (`heightIn(min = ...)`) across buttons, segmented tabs, search inputs, and navigation items, preventing label clipping and text overflow at high system font scales.
+- Navigation Bar Inset Handling: Injected proper navigation bar window insets and IME padding on the primary container, ensuring bottom buttons and input fields are never obscured by system navigation bars or the keyboard.
+- PatchExecutor DEX Discovery: Added `FindClassListFunc` and `dexClassList` / `getDexClasses` helpers for multi-class DEX searches in runtime patches.
+
 ## 3.4.2
 
 - UI Rollback: Restored the stable manager presentation without the experimental Liquid Glass
