@@ -183,6 +183,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0866FF,
             targets = listOf(
+                AppTarget("584.0.0.51.56"),
                 AppTarget("583.0.0.39.55"),
                 AppTarget("582.0.0.50.54"),
                 AppTarget("581.0.0.45.54"),
