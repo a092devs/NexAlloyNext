@@ -25,6 +25,7 @@ import kotlin.reflect.KProperty0
 
 typealias FindFunc = DexKitBridge.() -> Any
 typealias FindClassFunc = DexKitBridge.() -> ClassData
+typealias FindClassListFunc = DexKitBridge.() -> List<ClassData>
 typealias FindMethodFunc = DexKitBridge.() -> MethodData
 typealias FindMethodListFunc = DexKitBridge.() -> List<MethodData>
 typealias FindFieldFunc = DexKitBridge.() -> FieldData
@@ -214,6 +215,9 @@ class PatchExecutor(
     val KProperty0<FindClassFunc>.clazz
         get() = dexClass.toClass()
 
+    val KProperty0<FindClassListFunc>.dexClassList
+        get() = getDexClasses(this.name, this.get())
+
     // Fingerprint object extensions
 
     private val Fingerprint.cacheKey
@@ -276,6 +280,11 @@ class PatchExecutor(
     private inline fun getDexClass(
         key: String, crossinline findFunc: DexKitBridge.() -> ClassData
     ): DexClass = dexkit.getClassDirectOrNull(key, wrapFind(key, findFunc) { it.descriptor })!!
+
+    private inline fun getDexClasses(
+        key: String, crossinline findFunc: DexKitBridge.() -> List<ClassData>
+    ): List<DexClass> = dexkit.getClassesDirectOrEmpty(
+        key, wrapFindList(key, findFunc) { it.descriptor })
 
     private inline fun getDexMethod(
         key: String, crossinline findFunc: DexKitBridge.() -> MethodData

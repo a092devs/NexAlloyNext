@@ -10,6 +10,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -189,10 +190,11 @@ private fun AppCardDetails(app: AppItemState, icon: ImageBitmap?) {
             }
         }
 
-        // Evidence-based Badges row
-        Row(
+        // Evidence-based Badges row; FlowRow so badge sets wrap instead of overflowing on
+        // narrow windows or scaled-text densities.
+        FlowRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 10.dp),

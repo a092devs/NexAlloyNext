@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -487,6 +489,7 @@ fun ActionCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ActionCardContent(
     title: String,
@@ -515,7 +518,8 @@ private fun ActionCardContent(
             Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
         }
         if (primary != null || secondary != null) {
-            Row(
+            // FlowRow so two long (localized) labels wrap and stay tappable instead of squeezing.
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
                 modifier = Modifier
                     .fillMaxWidth()

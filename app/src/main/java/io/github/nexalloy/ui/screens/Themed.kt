@@ -83,6 +83,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.IntOffset
@@ -232,7 +233,9 @@ fun MiuixSegmentedTabs(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .height(corner * 2)
+            // Minimum comfortable height; scaled label text can grow the container instead of
+            // clipping at fixed dp (high font-scale / large-screen density).
+            .heightIn(min = corner * 2)
             .clip(RoundedCornerShape(corner))
             .background(MiuixTheme.colorScheme.surfaceContainer),
     ) {
@@ -247,7 +250,7 @@ fun MiuixSegmentedTabs(
                         y = gap.toPx().roundToInt(),
                     )
                 }
-                .size(width = segmentWidth, height = corner * 2 - gap * 2)
+                .size(width = segmentWidth, height = maxHeight - gap * 2)
                 .clip(RoundedCornerShape(corner - gap))
                 .background(indicatorColor),
         )
@@ -277,6 +280,7 @@ fun MiuixSegmentedTabs(
                             MiuixTheme.colorScheme.onSurfaceSecondary
                         },
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -458,7 +462,7 @@ fun ThemedCompactFilledButton(
         val fg = if (enabled) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.disabledOnPrimaryButton
         Row(
             modifier = modifier
-                .height(34.dp)
+                .heightIn(min = 34.dp)
                 .clip(shape)
                 .background(bg)
                 .clickable(enabled = enabled, onClick = onClick)
@@ -475,7 +479,7 @@ fun ThemedCompactFilledButton(
     } else {
         FilledTonalButton(
             onClick = onClick,
-            modifier = modifier.height(34.dp),
+            modifier = modifier.heightIn(min = 34.dp),
             enabled = enabled,
             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
             shape = shape,
@@ -507,7 +511,7 @@ fun ThemedCompactTonalButton(
         val fg = MiuixTheme.colorScheme.onSurfaceContainerHighest
         Row(
             modifier = modifier
-                .height(34.dp)
+                .heightIn(min = 34.dp)
                 .clip(shape)
                 .background(bg)
                 .clickable(enabled = enabled, onClick = onClick)
@@ -524,7 +528,7 @@ fun ThemedCompactTonalButton(
     } else {
         OutlinedButton(
             onClick = onClick,
-            modifier = modifier.height(34.dp),
+            modifier = modifier.heightIn(min = 34.dp),
             enabled = enabled,
             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
             shape = shape,
@@ -577,7 +581,7 @@ fun ThemedSearchField(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(46.dp)
+            .heightIn(min = 46.dp)
             .clip(shape)
             .background(backgroundColor)
             .padding(horizontal = 14.dp),

@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -65,7 +67,7 @@ import top.yukonga.miuix.kmp.basic.Card as MiuixCard
 import top.yukonga.miuix.kmp.basic.TopAppBar as MiuixTopAppBar
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navController: NavHostController) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -327,7 +329,12 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f).padding(end = 8.dp),
                             )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // FlowRow: long localized labels wrap onto a second line instead of
+                            // squeezing the summary text or overflowing the card.
+                            FlowRow(
+                                modifier = Modifier.padding(start = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                            ) {
                                 ThemedOutlinedButton(
                                     label = "App info",
                                     onClick = { viewModel.openAppInfo(packageName) },

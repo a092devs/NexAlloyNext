@@ -34,12 +34,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -68,6 +74,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -160,7 +167,7 @@ private val topLevel = listOf(
     TopLevel(MainActivity.DESTINATION_SETTINGS, R.string.nav_settings, Icons.Filled.Settings, MiuixIcons.MiuixSettings),
 )
 
-/** One floating navigation item; fixed size so the selection pill can slide by index. */
+/** One floating navigation item; sized by content with a comfortable touch-target minimum. */
 private val FloatingItemWidth = 92.dp
 private val FloatingItemHeight = 64.dp
 
@@ -322,7 +329,12 @@ private fun MiuixManagerApp(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiuixTheme.colorScheme.background),
+            .background(MiuixTheme.colorScheme.background)
+            // The Miuix presentation paints its own page and hosts its own navigation bars, so it
+            // must also consume the gesture-inset and IME space itself: without this, rows sit
+            // under the gesture bar and the keyboard covers focused search fields.
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .imePadding(),
     ) {
         if (floatingNavigation) {
             MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
@@ -569,7 +581,10 @@ private fun MiuixFloatingNavItem(
 
     Box(
         modifier = Modifier
-            .size(width = FloatingItemWidth, height = FloatingItemHeight)
+            // Comfortable touch target; scaled labels grow the item instead of clipping
+            // (fixed dp boxes clipped 11sp labels at high font scale / large-screen density).
+            .widthIn(min = FloatingItemWidth)
+            .heightIn(min = FloatingItemHeight)
             .clip(RoundedCornerShape(17.dp))
             .selectable(
                 selected = selected,
@@ -583,7 +598,8 @@ private fun MiuixFloatingNavItem(
         if (pillAlpha > 0f) {
             Box(
                 modifier = Modifier
-                    .size(width = FloatingItemWidth - 12.dp, height = FloatingItemHeight - 12.dp)
+                    .matchParentSize()
+                    .padding(6.dp)
                     .clip(RoundedCornerShape(percent = 50))
                     .background(indicatorColor.copy(alpha = indicatorColor.alpha * pillAlpha)),
             )
@@ -606,6 +622,7 @@ private fun MiuixFloatingNavItem(
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 color = tint,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
