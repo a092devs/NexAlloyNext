@@ -160,6 +160,8 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x4285F4,
             targets = listOf(
+                AppTarget("18.5.4.993608717-release-arm64-v8a"),
+                AppTarget("18.5.3.993608717-release-arm64-v8a"),
                 AppTarget("18.4.1.985164140-release-arm64-v8a"),
                 AppTarget("18.4.1.985164140-beta-arm64-v8a"),
                 AppTarget("18.3.1.977415014-release-arm64-v8a"),
