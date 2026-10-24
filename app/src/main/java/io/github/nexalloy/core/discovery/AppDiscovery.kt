@@ -252,6 +252,36 @@ object AppDiscovery {
                 AppTarget("12.35.0-prod.01"),
             ),
         ),
+        KnownSupportedApp(
+            packageName = "org.telegram.messenger",
+            appName = "Telegram",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x2AABEE,
+            targets = listOf(
+                AppTarget("13.1.0"),
+                AppTarget("12.10.6"),
+            ),
+        ),
+        KnownSupportedApp(
+            packageName = "org.telegram.messenger.web",
+            appName = "Telegram (Web)",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x2AABEE,
+            targets = listOf(
+                AppTarget("13.1.0"),
+                AppTarget("12.10.6"),
+            ),
+        ),
+        KnownSupportedApp(
+            packageName = "fork.risin42.nagramx",
+            appName = "Nagram XF",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0x2AABEE,
+            targets = listOf(
+                AppTarget("12.10.6-e346c5e"),
+                AppTarget("12.10.6"),
+            ),
+        ),
     )
 
     /**
