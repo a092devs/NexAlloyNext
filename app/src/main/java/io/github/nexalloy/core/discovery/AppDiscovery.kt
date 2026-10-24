@@ -272,16 +272,6 @@ object AppDiscovery {
                 AppTarget("12.10.6"),
             ),
         ),
-        KnownSupportedApp(
-            packageName = "fork.risin42.nagramx",
-            appName = "Nagram XF",
-            defaultBundleName = "NexFusion Patches",
-            appIconColor = 0x2AABEE,
-            targets = listOf(
-                AppTarget("12.10.6-e346c5e"),
-                AppTarget("12.10.6"),
-            ),
-        ),
     )
 
     /**
