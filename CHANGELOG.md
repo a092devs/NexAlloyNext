@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.2
+
+- Fluid Navigation Geometry & Bounds Alignment: Re-architected indicator layout to sample exact measured tab coordinates directly from the layout pass, guaranteeing pixel-perfect alignment under the Settings tab across all screen sizes, display scaling levels, and orientations.
+- Multi-Screen Responsive Drag Kinetics: Refactored touch drag gesture tracking with continuous boundary mapping and eliminated artificial container shifts during intra-tab transitions.
+
 ## 3.5.1
 
 - Fluid Liquid Glass Floating Navigation: Implemented continuous touch drag tracking, dynamic horizontal stretch kinetics, and physics-based spring snapping across navigation destinations.

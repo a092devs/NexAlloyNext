@@ -1,8 +1,5 @@
 package io.github.nexalloy.ui.liquid
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
@@ -17,18 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -38,15 +32,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -55,9 +50,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastCoerceIn
-import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.blur.Backdrop
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurDefaults
@@ -66,7 +58,6 @@ import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
 import kotlin.math.roundToInt
-import kotlin.math.sign
 
 data class FluidTabItem(
     val route: String,
@@ -78,9 +69,9 @@ data class FluidTabItem(
 val LocalFluidTabScale = staticCompositionLocalOf { { 1f } }
 
 /**
- * iOS WhatsApp-style liquid glass floating navigation bar with fluid spring physics,
- * continuous touch-and-hold drag navigation, velocity-based liquid deformation,
- * and optional translucent backdrop refraction.
+ * Liquid glass floating navigation bar with fluid spring physics,
+ * continuous touch drag navigation, velocity-based liquid deformation,
+ * and measured layout bounds ensuring perfect alignment across all screen sizes.
  */
 @Composable
 fun FluidFloatingBottomBar(
@@ -102,51 +93,44 @@ fun FluidFloatingBottomBar(
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
     val animationScope = rememberCoroutineScope()
 
-    var tabWidthPx by remember { mutableFloatStateOf(0f) }
-    var totalWidthPx by remember { mutableFloatStateOf(0f) }
+    val barHeight = 62.dp
+    val pillHeight = 48.dp
+    val tabWidth = 86.dp
+    val outerHorizontalPadding = 6.dp
 
-    val offsetAnimation = remember { Animatable(0f) }
-    val rubberBandPx = with(density) { 5.dp.toPx() }
-    val panelOffset by remember(rubberBandPx) {
-        derivedStateOf {
-            if (totalWidthPx == 0f) {
-                0f
-            } else {
-                val fraction = (offsetAnimation.value / totalWidthPx).fastCoerceIn(-1f, 1f)
-                rubberBandPx * fraction.sign * EaseOut.transform(abs(fraction))
-            }
-        }
-    }
+    // Measured layout bounds for each tab relative to the inner content box
+    val tabLefts = remember(tabsCount) { mutableStateListOf<Float>().apply { repeat(tabsCount) { add(0f) } } }
+    val tabWidths = remember(tabsCount) { mutableStateListOf<Float>().apply { repeat(tabsCount) { add(0f) } } }
 
     var currentIndex by remember { mutableIntStateOf(selectedIndex) }
     val onSelectedUpdated by rememberUpdatedState(onSelected)
 
-    LaunchedEffect(selectedIndex) {
-        if (currentIndex != selectedIndex) {
-            currentIndex = selectedIndex
-        }
-    }
-
     fun indexAt(positionX: Float): Int {
-        if (tabWidthPx == 0f) return currentIndex
-        val horizontalPaddingPx = with(density) { 6.dp.toPx() }
-        val logicalX = if (isLtr) positionX else totalWidthPx - positionX
-        return ((logicalX - horizontalPaddingPx) / tabWidthPx)
-            .toInt()
-            .coerceIn(0, tabsCount - 1)
+        val hasMeasured = tabWidths.isNotEmpty() && tabWidths[0] > 0f
+        if (!hasMeasured) return currentIndex
+        val paddingPx = with(density) { outerHorizontalPadding.toPx() }
+        val contentX = if (isLtr) positionX - paddingPx else (tabWidths.sum() - (positionX - paddingPx))
+        for (i in 0 until tabsCount) {
+            val left = tabLefts.getOrElse(i) { 0f }
+            val width = tabWidths.getOrElse(i) { 0f }
+            if (contentX in left..(left + width)) {
+                return i
+            }
+        }
+        val firstLeft = tabLefts.getOrElse(0) { 0f }
+        if (contentX < firstLeft) return 0
+        return tabsCount - 1
     }
 
     val dampedDragAnimation = remember(animationScope, tabsCount, density, isLtr) {
         DampedDragAnimation(
             animationScope = animationScope,
             initialValue = selectedIndex.toFloat(),
-            valueRange = 0f..(tabsCount - 1).toFloat(),
+            valueRange = -0.3f..(tabsCount - 1 + 0.3f),
             visibilityThreshold = 0.001f,
             initialScale = 1f,
             pressedScale = 1.0f,
-            canDrag = { offset ->
-                offset.x in 0f..totalWidthPx
-            },
+            canDrag = { true },
             onDragStarted = { position ->
                 updateValue(indexAt(position.x).toFloat())
             },
@@ -156,32 +140,26 @@ fun FluidFloatingBottomBar(
                     currentIndex = targetIndex
                     onSelectedUpdated(targetIndex)
                 }
-                updateValue(targetIndex.toFloat())
-                animationScope.launch {
-                    offsetAnimation.animateTo(0f, spring(1f, 350f, 0.5f))
-                }
+                animateToValue(targetIndex.toFloat())
             },
             onDragCancelled = {
-                updateValue(currentIndex.toFloat())
-                animationScope.launch {
-                    offsetAnimation.animateTo(0f, spring(1f, 350f, 0.5f))
-                }
+                animateToValue(currentIndex.toFloat())
             },
             onDrag = { _, dragAmount ->
-                if (tabWidthPx > 0f && dragAmount.x != 0f) {
-                    updateValue(
-                        (targetValue + dragAmount.x / tabWidthPx * if (isLtr) 1f else -1f)
-                            .coerceIn(0f, (tabsCount - 1).toFloat()),
-                    )
-                    animationScope.launch {
-                        offsetAnimation.snapTo(offsetAnimation.value + dragAmount.x)
-                    }
+                val avgWidth = tabWidths.firstOrNull { it > 0f } ?: with(density) { tabWidth.toPx() }
+                if (avgWidth > 0f && dragAmount.x != 0f) {
+                    val delta = (dragAmount.x / avgWidth) * if (isLtr) 1f else -1f
+                    val newTarget = (targetValue + delta).coerceIn(-0.3f, (tabsCount - 1) + 0.3f)
+                    updateValue(newTarget)
                 }
             },
         )
     }
 
     LaunchedEffect(selectedIndex) {
+        if (currentIndex != selectedIndex) {
+            currentIndex = selectedIndex
+        }
         if (dampedDragAnimation.targetValue.roundToInt() != selectedIndex) {
             dampedDragAnimation.animateToValue(selectedIndex.toFloat())
         }
@@ -200,13 +178,54 @@ fun FluidFloatingBottomBar(
         if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight
     }
 
-    val barHeight = 62.dp
-    val pillHeight = 48.dp
+    // Precise indicator coordinates with dynamic edge dampening
+    val currentProgress = dampedDragAnimation.value
+    val hasMeasured = tabWidths.isNotEmpty() && tabWidths[0] > 0f
+
+    val rawLeftPx: Float
+    val rawWidthPx: Float
+
+    if (hasMeasured) {
+        val lastIndex = tabsCount - 1
+        if (currentProgress <= 0f) {
+            val left0 = tabLefts[0]
+            val width0 = tabWidths[0]
+            rawLeftPx = left0 + currentProgress * (width0 * 0.25f)
+            rawWidthPx = width0
+        } else if (currentProgress >= lastIndex.toFloat()) {
+            val leftLast = tabLefts[lastIndex]
+            val widthLast = tabWidths[lastIndex]
+            val over = currentProgress - lastIndex.toFloat()
+            rawLeftPx = leftLast + over * (widthLast * 0.25f)
+            rawWidthPx = widthLast
+        } else {
+            val baseIndex = currentProgress.toInt().coerceIn(0, lastIndex - 1)
+            val nextIndex = baseIndex + 1
+            val fraction = currentProgress - baseIndex
+            val leftA = tabLefts[baseIndex]
+            val widthA = tabWidths[baseIndex]
+            val leftB = tabLefts[nextIndex]
+            val widthB = tabWidths[nextIndex]
+            rawLeftPx = leftA + (leftB - leftA) * fraction
+            rawWidthPx = widthA + (widthB - widthA) * fraction
+        }
+    } else {
+        val fallbackWidthPx = with(density) { tabWidth.toPx() }
+        rawLeftPx = currentProgress * fallbackWidthPx
+        rawWidthPx = fallbackWidthPx
+    }
+
+    val horizontalInsetPx = with(density) { 4.dp.toPx() }
+    val pillLeftPx = rawLeftPx + horizontalInsetPx
+    val pillWidthPx = (rawWidthPx - horizontalInsetPx * 2f).coerceAtLeast(0f)
+    val pillWidthDp = with(density) { pillWidthPx.toDp() }
+
+    val velocity = dampedDragAnimation.velocity
+    val stretch = (abs(velocity) * 0.08f).coerceIn(0f, 0.14f)
 
     Box(
         modifier = modifier
             .width(IntrinsicSize.Min)
-            .graphicsLayer { translationX = panelOffset }
             .then(dampedDragAnimation.modifier),
         contentAlignment = Alignment.CenterStart,
     ) {
@@ -248,51 +267,37 @@ fun FluidFloatingBottomBar(
                 }
             )
             .height(barHeight)
-            .padding(horizontal = 6.dp)
+            .padding(horizontal = outerHorizontalPadding)
 
         Box(
             modifier = outerModifier,
             contentAlignment = Alignment.CenterStart,
         ) {
             // Fluid moving indicator pill
-            if (tabWidthPx > 0f) {
-                val tabWidthDp = with(density) { tabWidthPx.toDp() }
-                val progressOffset = dampedDragAnimation.value * tabWidthPx
-                val pillTranslationX = if (isLtr) progressOffset else -progressOffset
-                val velocity = dampedDragAnimation.velocity
-                val stretch = (abs(velocity) * 0.10f).coerceIn(0f, 0.16f)
-
-                Box(
-                    Modifier
-                        .graphicsLayer {
-                            translationX = pillTranslationX
-                            scaleX = 1f + stretch
-                            scaleY = 1f - (stretch * 0.25f)
-                        }
-                        .padding(horizontal = 4.dp)
-                        .clip(pillShape)
-                        .background(
-                            color = primaryColor.copy(alpha = if (isDark) 0.26f else 0.18f),
-                            shape = pillShape,
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = if (isDark) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.30f),
-                            shape = pillShape,
-                        )
-                        .height(pillHeight)
-                        .width(tabWidthDp - 8.dp)
-                )
-            }
+            Box(
+                Modifier
+                    .graphicsLayer {
+                        translationX = pillLeftPx
+                        scaleX = 1f + stretch
+                        scaleY = 1f - (stretch * 0.25f)
+                    }
+                    .clip(pillShape)
+                    .background(
+                        color = primaryColor.copy(alpha = if (isDark) 0.26f else 0.18f),
+                        shape = pillShape,
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (isDark) Color.White.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.30f),
+                        shape = pillShape,
+                    )
+                    .height(pillHeight)
+                    .width(pillWidthDp)
+            )
 
             // Tab items row positioned on top
             Row(
                 modifier = Modifier
-                    .onGloballyPositioned { coords ->
-                        totalWidthPx = coords.size.width.toFloat()
-                        val contentWidthPx = totalWidthPx - with(density) { 12.dp.toPx() }
-                        tabWidthPx = (contentWidthPx / tabsCount).coerceAtLeast(0f)
-                    }
                     .selectableGroup()
                     .height(barHeight),
                 verticalAlignment = Alignment.CenterVertically,
@@ -306,6 +311,16 @@ fun FluidFloatingBottomBar(
 
                     Column(
                         modifier = Modifier
+                            .onGloballyPositioned { coords ->
+                                val parent = coords.parentCoordinates
+                                if (parent != null) {
+                                    val pos = parent.localPositionOf(coords, Offset.Zero)
+                                    if (index < tabLefts.size) {
+                                        tabLefts[index] = pos.x
+                                        tabWidths[index] = coords.size.width.toFloat()
+                                    }
+                                }
+                            }
                             .semantics(mergeDescendants = true) {
                                 this.selected = isTabSelected
                                 role = Role.Tab
@@ -316,8 +331,8 @@ fun FluidFloatingBottomBar(
                             }
                             .focusable()
                             .fillMaxHeight()
-                            .widthIn(min = 78.dp)
-                            .padding(horizontal = 14.dp),
+                            .width(tabWidth)
+                            .padding(horizontal = 6.dp),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
