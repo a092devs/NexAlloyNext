@@ -128,7 +128,9 @@ fun HomeContent(
                 .padding(top = padding.calculateTopPadding()),
         ) {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 24.dp),
+                contentPadding = PaddingValues(
+                    bottom = 24.dp + outerPadding.calculateBottomPadding(),
+                ),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 // Module Status Card - Placed at the top immediately below top bar
@@ -323,8 +325,7 @@ fun HomeContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(bottom = outerPadding.calculateBottomPadding()),
+                .background(MaterialTheme.colorScheme.background),
         ) {
             MiuixTopAppBar(
                 title = stringResource(R.string.app_name),
@@ -334,9 +335,7 @@ fun HomeContent(
         }
     } else {
         Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(bottom = outerPadding.calculateBottomPadding()),
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(

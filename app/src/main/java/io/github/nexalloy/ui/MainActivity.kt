@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -83,6 +84,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.nexalloy.ui.liquid.FluidFloatingBottomBar
+import io.github.nexalloy.ui.liquid.FluidTabItem
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -463,12 +466,6 @@ private fun MiuixFloatingNavigationApp(
     } else null
     val blurActive = backdrop != null
 
-    val floatingBarShape = RoundedCornerShape(FloatingToolbarDefaults.CornerRadius)
-    val floatingBarColor = if (blurActive) Color.Transparent else MiuixTheme.colorScheme.surfaceContainer
-    val floatingHighlight = remember(isDark) {
-        if (isDark) Highlight.GlassStrokeMiddleDark else Highlight.GlassStrokeMiddleLight
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
         // Main content container with layerBackdrop attached to capture scrolling content
         Box(
@@ -505,40 +502,33 @@ private fun MiuixFloatingNavigationApp(
                 animationSpec = tween(220),
                 targetOffsetY = { it / 2 },
             ) + fadeOut(animationSpec = tween(160)),
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding(),
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                FloatingNavigationBar(
-                    modifier = if (blurActive) {
-                        Modifier.textureBlur(
-                            backdrop = backdrop,
-                            shape = floatingBarShape,
-                            blurRadius = 25f,
-                            colors = BlurDefaults.blurColors(
-                                blendColors = listOf(
-                                    BlendColorEntry(color = MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.65f)),
-                                ),
-                            ),
-                            highlight = floatingHighlight,
-                        )
-                    } else {
-                        Modifier
-                    },
-                    color = floatingBarColor,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    MiuixFloatingNavItems(
-                        selectedRoute = route,
-                        isDark = isDark,
-                        onSelect = { navController.navigateTopLevel(it) },
+            val fluidTabs = remember {
+                topLevel.map {
+                    FluidTabItem(
+                        route = it.route,
+                        label = it.label,
+                        selectedIcon = it.selectedIcon,
+                        unselectedIcon = it.unselectedIcon,
                     )
                 }
             }
+            val selectedIndex = topLevel.indexOfFirst { it.route == route }.coerceAtLeast(0)
+            FluidFloatingBottomBar(
+                selectedIndex = selectedIndex,
+                onSelected = { index ->
+                    val target = topLevel.getOrNull(index) ?: topLevel[0]
+                    navController.navigateTopLevel(target.route)
+                },
+                tabs = fluidTabs,
+                isTranslucent = state.floatingBarTranslucent,
+                isDark = isDark,
+                backdrop = backdrop,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+            )
         }
     }
 }

@@ -163,7 +163,7 @@ fun PatchesContent(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 96.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp + outerPadding.calculateBottomPadding()),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     if (selectedTab == 0) {
@@ -243,8 +243,7 @@ fun PatchesContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(bottom = outerPadding.calculateBottomPadding()),
+                .background(MaterialTheme.colorScheme.background),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 MiuixTopAppBar(
@@ -274,7 +273,7 @@ fun PatchesContent(
                     onClick = { addSource = true },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(16.dp),
+                        .padding(end = 16.dp, bottom = 16.dp + outerPadding.calculateBottomPadding()),
                 ) {
                     Icon(icons.add, contentDescription = stringResource(R.string.add_source_title))
                 }
@@ -282,9 +281,7 @@ fun PatchesContent(
         }
     } else {
         Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(bottom = outerPadding.calculateBottomPadding()),
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(

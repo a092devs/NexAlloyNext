@@ -97,8 +97,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(bottom = outerPadding.calculateBottomPadding()),
+                .background(MaterialTheme.colorScheme.background),
         ) {
             MiuixTopAppBar(
                 title = stringResource(R.string.nav_settings),
@@ -106,7 +105,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             )
 
             LazyColumn(
-                contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp + outerPadding.calculateBottomPadding()),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 item { SmallTitle(insideMargin = MiuixSectionTitleMargin, text = stringResource(R.string.settings_updates)) }
@@ -158,6 +157,14 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
                             checked = state.floatingNavigation,
                             onCheckedChange = { viewModel.setFloatingNavigation(it) },
                         )
+                        if (state.floatingNavigation) {
+                            SwitchPreference(
+                                title = stringResource(R.string.miuix_floating_nav_translucent_title),
+                                summary = stringResource(R.string.miuix_floating_nav_translucent_summary),
+                                checked = state.floatingBarTranslucent,
+                                onCheckedChange = { viewModel.setFloatingBarTranslucent(it) },
+                            )
+                        }
                     }
                 }
 
@@ -210,9 +217,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
     } else {
         // Standard Material 3 layout
         Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(bottom = outerPadding.calculateBottomPadding()),
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
@@ -226,7 +231,7 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             },
         ) { padding ->
             LazyColumn(
-                contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 24.dp),
+                contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 24.dp + outerPadding.calculateBottomPadding()),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 item { SectionHeader(stringResource(R.string.settings_updates)) }

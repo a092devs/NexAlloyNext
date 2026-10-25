@@ -80,6 +80,8 @@ data class ManagerState(
     val currentColorScheme: String = AppSettings.COLOR_SCHEME_DEFAULT,
     /** Miuix-only: floating navigation bar preference. Disabled by default. */
     val floatingNavigation: Boolean = AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION,
+    /** Miuix-only: translucent liquid glass blur on floating navigation bar. */
+    val floatingBarTranslucent: Boolean = true,
     val searchQuery: String = "",
 ) {
     val isActive get() = service != null
@@ -122,6 +124,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
             currentThemeStyle = settings.themeStyle,
             currentColorScheme = settings.colorScheme,
             floatingNavigation = settings.miuixFloatingNavigation,
+            floatingBarTranslucent = settings.miuixFloatingBarTranslucent,
             releases = loadInitialReleases(),
         )
     )
@@ -208,6 +211,14 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
         _state.update { it.copy(floatingNavigation = enabled) }
     }
 
+    /**
+     * Miuix-only translucent liquid glass blur on floating navigation bar.
+     */
+    fun setFloatingBarTranslucent(enabled: Boolean) {
+        settings.miuixFloatingBarTranslucent = enabled
+        _state.update { it.copy(floatingBarTranslucent = enabled) }
+    }
+
     /** Re-reads bundles, sources, scope, and reconstructs the app catalog. */
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -226,6 +237,7 @@ class ManagerViewModel(application: Application) : AndroidViewModel(application)
                     currentThemeStyle = settings.themeStyle,
                     currentColorScheme = settings.colorScheme,
                     floatingNavigation = settings.miuixFloatingNavigation,
+                    floatingBarTranslucent = settings.miuixFloatingBarTranslucent,
                 )
             }
         }

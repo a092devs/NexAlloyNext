@@ -55,6 +55,14 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("miuix_floating_navigation", AppPreferenceNames.DEFAULT_FLOATING_NAVIGATION)
         set(value) = prefs.edit().putBoolean("miuix_floating_navigation", value).apply()
 
+    /**
+     * Miuix-only: enable translucent liquid glass blur effect on the floating navigation bar.
+     * Enabled by default when floating navigation is on.
+     */
+    var miuixFloatingBarTranslucent: Boolean
+        get() = prefs.getBoolean("miuix_floating_bar_translucent", true)
+        set(value) = prefs.edit().putBoolean("miuix_floating_bar_translucent", value).apply()
+
     /** Version last notified about per update key, so every version notifies once. */
     fun lastNotified(key: String): String? = prefs.getString("notified_$key", null)
 

@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.1
+
+- Fluid Liquid Glass Floating Navigation: Implemented continuous touch drag tracking, dynamic horizontal stretch kinetics, and physics-based spring snapping across navigation destinations.
+- Direct-Page Full Height Layout: Removed artificial bottom container clearance to let scrollable content glide smoothly underneath the translucent floating bar with seamless edge-to-edge depth.
+- Translucent Frosted Glass Effect: Enhanced floating navigation bar with dynamic backdrop texture blur and subtle highlight borders in MIUIX theme, accompanied by an appearance toggle in Settings.
+- System Gesture Navigation Insets: Coordinated navigation bar window insets and bottom content padding so interactive elements remain accessible above the gesture navigation pill.
+- Unified Theme & Icon Harmony: Paired modern outlined/filled icons for Home, modular Patches, and Settings with a balanced dark theme palette across Material 3 and MIUIX.
+
 ## 3.5.0
 
 - App Icon & Visual Identity: Replaced legacy branding with modern Prism Alloy geometric emblem and Material You monochrome adaptive icons.
