@@ -243,11 +243,13 @@ fun PatchesContent(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(bottom = outerPadding.calculateBottomPadding()),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 MiuixTopAppBar(
                     title = stringResource(R.string.nav_patches),
+                    color = MaterialTheme.colorScheme.background,
                     actions = {
                         ThemedIconButton(onClick = { menu = true }) {
                             Icon(icons.more, contentDescription = null)
@@ -283,9 +285,14 @@ fun PatchesContent(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(bottom = outerPadding.calculateBottomPadding()),
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
                     title = { Text(stringResource(R.string.nav_patches)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
                     actions = {
                         IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, contentDescription = null) }
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {

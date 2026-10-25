@@ -1,6 +1,7 @@
 package io.github.nexalloy.ui.screens
 
 import android.text.format.DateUtils
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -96,9 +97,13 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(bottom = outerPadding.calculateBottomPadding()),
         ) {
-            MiuixTopAppBar(title = stringResource(R.string.nav_settings))
+            MiuixTopAppBar(
+                title = stringResource(R.string.nav_settings),
+                color = MaterialTheme.colorScheme.background,
+            )
 
             LazyColumn(
                 contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
@@ -208,7 +213,17 @@ fun SettingsScreen(viewModel: ManagerViewModel, outerPadding: PaddingValues) {
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(bottom = outerPadding.calculateBottomPadding()),
-            topBar = { TopAppBar(title = { Text(stringResource(R.string.nav_settings)) }, scrollBehavior = scrollBehavior) },
+            containerColor = MaterialTheme.colorScheme.background,
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.nav_settings)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                    scrollBehavior = scrollBehavior,
+                )
+            },
         ) { padding ->
             LazyColumn(
                 contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 24.dp),

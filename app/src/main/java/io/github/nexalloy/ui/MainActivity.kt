@@ -49,10 +49,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.Extension
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -108,10 +112,6 @@ import top.yukonga.miuix.kmp.blur.isRuntimeShaderSupported
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.GridView
-import top.yukonga.miuix.kmp.icon.extended.Layers
-import top.yukonga.miuix.kmp.icon.extended.Settings as MiuixSettings
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 class MainActivity : ComponentActivity() {
@@ -157,14 +157,29 @@ class MainActivity : ComponentActivity() {
 private class TopLevel(
     val route: String,
     val label: Int,
-    val m3Icon: ImageVector,
-    val miuixIcon: ImageVector,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
 )
 
 private val topLevel = listOf(
-    TopLevel(MainActivity.DESTINATION_HOME, R.string.nav_home, Icons.Filled.Home, MiuixIcons.GridView),
-    TopLevel(MainActivity.DESTINATION_PATCHES, R.string.nav_patches, Icons.Filled.Build, MiuixIcons.Layers),
-    TopLevel(MainActivity.DESTINATION_SETTINGS, R.string.nav_settings, Icons.Filled.Settings, MiuixIcons.MiuixSettings),
+    TopLevel(
+        route = MainActivity.DESTINATION_HOME,
+        label = R.string.nav_home,
+        selectedIcon = Icons.Rounded.Home,
+        unselectedIcon = Icons.Outlined.Home,
+    ),
+    TopLevel(
+        route = MainActivity.DESTINATION_PATCHES,
+        label = R.string.nav_patches,
+        selectedIcon = Icons.Rounded.Extension,
+        unselectedIcon = Icons.Outlined.Extension,
+    ),
+    TopLevel(
+        route = MainActivity.DESTINATION_SETTINGS,
+        label = R.string.nav_settings,
+        selectedIcon = Icons.Rounded.Settings,
+        unselectedIcon = Icons.Outlined.Settings,
+    ),
 )
 
 /** One floating navigation item; sized by content with a comfortable touch-target minimum. */
@@ -252,15 +267,24 @@ private fun Material3ManagerApp(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             if (isTopLevel) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ) {
                     topLevel.forEach { item ->
+                        val selected = route == item.route
                         NavigationBarItem(
-                            selected = route == item.route,
+                            selected = selected,
                             onClick = { navController.navigateTopLevel(item.route) },
-                            icon = { Icon(item.m3Icon, contentDescription = null) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = null,
+                                )
+                            },
                             label = { Text(stringResource(item.label)) },
                         )
                     }
@@ -326,10 +350,11 @@ private fun MiuixManagerApp(
         AppSettings.THEME_DARK -> true
         else -> isSystemInDarkTheme()
     }
+    val canvasBg = MaterialTheme.colorScheme.background
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MiuixTheme.colorScheme.background),
+            .background(canvasBg),
     ) {
         if (floatingNavigation) {
             MiuixFloatingNavigationApp(navController, viewModel, isTopLevel, snackbar)
@@ -395,10 +420,11 @@ private fun MiuixStandardNavigationApp(
         if (isTopLevel) {
             MiuixNavigationBar {
                 topLevel.forEach { item ->
+                    val selected = route == item.route
                     MiuixNavigationBarItem(
-                        selected = route == item.route,
+                        selected = selected,
                         onClick = { navController.navigateTopLevel(item.route) },
-                        icon = item.miuixIcon,
+                        icon = if (selected) item.selectedIcon else item.unselectedIcon,
                         label = stringResource(item.label),
                     )
                 }
@@ -428,10 +454,10 @@ private fun MiuixFloatingNavigationApp(
     val route = navController.currentBackStackEntryAsState().value?.destination?.route
 
     val blurSupported = isRuntimeShaderSupported()
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val canvasBg = MaterialTheme.colorScheme.background
     val backdrop = if (blurSupported) {
         rememberLayerBackdrop {
-            drawRect(surfaceColor)
+            drawRect(canvasBg)
             drawContent()
         }
     } else null
@@ -448,6 +474,7 @@ private fun MiuixFloatingNavigationApp(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(canvasBg)
                 .then(if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier)
         ) {
             // Give 96dp bottom clearance on top-level screens so the floating bar never covers content
@@ -531,8 +558,7 @@ private fun MiuixFloatingNavItems(
             MiuixFloatingNavItem(
                 selected = selectedRoute == item.route,
                 onClick = { onSelect(item.route) },
-                icon = item.miuixIcon,
-                label = stringResource(item.label),
+                item = item,
                 isDark = isDark,
             )
         }
@@ -548,19 +574,19 @@ private fun MiuixFloatingNavItems(
 private fun MiuixFloatingNavItem(
     selected: Boolean,
     onClick: () -> Unit,
-    icon: ImageVector,
-    label: String,
+    item: TopLevel,
     isDark: Boolean,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
     val baseColor = MiuixTheme.colorScheme.onSurfaceContainer
-    val indicatorColor = MiuixTheme.colorScheme.primary.copy(alpha = if (isDark) 0.26f else 0.16f)
+    val primaryColor = MiuixTheme.colorScheme.primary
+    val indicatorColor = primaryColor.copy(alpha = if (isDark) 0.22f else 0.14f)
 
     val targetAlpha = when {
-        pressed -> if (selected) 0.55f else 0.75f
+        pressed -> if (selected) 0.70f else 0.85f
         selected -> 1f
-        else -> 0.62f
+        else -> 0.65f
     }
     val alpha by animateFloatAsState(
         targetValue = targetAlpha,
@@ -572,12 +598,12 @@ private fun MiuixFloatingNavItem(
         animationSpec = tween(150),
         label = "floatingNavItemPillAlpha",
     )
-    val tint = baseColor.copy(alpha = alpha)
+    val tint = if (selected) primaryColor else baseColor.copy(alpha = alpha)
 
     Box(
         modifier = Modifier
             .size(width = FloatingItemWidth, height = FloatingItemHeight)
-            .clip(RoundedCornerShape(17.dp))
+            .clip(RoundedCornerShape(18.dp))
             .selectable(
                 selected = selected,
                 role = Role.Tab,
@@ -590,7 +616,7 @@ private fun MiuixFloatingNavItem(
         if (pillAlpha > 0f) {
             Box(
                 modifier = Modifier
-                    .size(width = FloatingItemWidth - 12.dp, height = FloatingItemHeight - 12.dp)
+                    .size(width = FloatingItemWidth - 14.dp, height = FloatingItemHeight - 12.dp)
                     .clip(RoundedCornerShape(percent = 50))
                     .background(indicatorColor.copy(alpha = indicatorColor.alpha * pillAlpha)),
             )
@@ -601,14 +627,14 @@ private fun MiuixFloatingNavItem(
             modifier = Modifier.fillMaxSize(),
         ) {
             Icon(
-                imageVector = icon,
+                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
                 contentDescription = null,
                 tint = tint,
                 modifier = Modifier.size(24.dp),
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
-                text = label,
+                text = stringResource(item.label),
                 fontSize = 11.sp,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 color = tint,

@@ -435,10 +435,15 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     }
 
     if (isMiuix) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
             MiuixTopAppBar(
                 title = appName,
                 subtitle = packageName,
+                color = MaterialTheme.colorScheme.background,
                 navigationIcon = {
                     ThemedIconButton(onClick = { navController.popBackStack() }) {
                         Icon(icons.back, contentDescription = null)
@@ -466,6 +471,7 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
     } else {
         Scaffold(
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
                     title = {
@@ -478,6 +484,10 @@ fun AppPatchesScreen(viewModel: ManagerViewModel, packageName: String, navContro
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
                     navigationIcon = {
                         ThemedIconButton(onClick = { navController.popBackStack() }) {
                             Icon(icons.back, contentDescription = null)

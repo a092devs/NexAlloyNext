@@ -154,14 +154,20 @@ private val MiuixDarkScheme = darkColorScheme(
     outlineVariant = Color(0xFF334155),
 )
 
-/** Fixed accent seeds for the named colour schemes; "default" has no seed. */
-private fun schemeSeed(colorScheme: String): Color? = when (colorScheme) {
+/**
+ * Signature seed for NexAlloy's default theme: Royal Alloy Cobalt.
+ * Produces an ultra-clean, modern, deep obsidian canvas in dark mode and crisp porcelain in light mode.
+ */
+val DefaultAlloySeed = Color(0xFF2563EB)
+
+/** Fixed accent seeds for the named colour schemes. */
+private fun schemeSeed(colorScheme: String): Color = when (colorScheme) {
     AppPreferenceNames.COLOR_SCHEME_VIOLET -> Color(0xFF7C5CFF)
     AppPreferenceNames.COLOR_SCHEME_EMERALD -> Color(0xFF10B981)
     AppPreferenceNames.COLOR_SCHEME_AMBER -> Color(0xFFF59E0B)
     AppPreferenceNames.COLOR_SCHEME_ROSE -> Color(0xFFE11D48)
     AppPreferenceNames.COLOR_SCHEME_OCEAN -> Color(0xFF0EA5E9)
-    else -> null
+    else -> DefaultAlloySeed
 }
 
 /**
@@ -241,12 +247,7 @@ fun NexAlloyTheme(
     val accent = schemeSeed(colorScheme)
 
     if (style == ThemeStyle.MIUIX) {
-        val colorSchemeMode = when {
-            accent != null -> if (isDark) ColorSchemeMode.MonetDark else ColorSchemeMode.MonetLight
-            themeMode == AppSettings.THEME_LIGHT -> ColorSchemeMode.Light
-            themeMode == AppSettings.THEME_DARK -> ColorSchemeMode.Dark
-            else -> ColorSchemeMode.System
-        }
+        val colorSchemeMode = if (isDark) ColorSchemeMode.MonetDark else ColorSchemeMode.MonetLight
         val controller = remember(colorSchemeMode, accent, isDark) {
             ThemeController(
                 colorSchemeMode = colorSchemeMode,
@@ -254,11 +255,7 @@ fun NexAlloyTheme(
                 isDark = isDark,
             )
         }
-        val m3Equivalent = when {
-            accent != null -> materialSchemeFromSeed(accent, isDark)
-            isDark -> MiuixDarkScheme
-            else -> MiuixLightScheme
-        }
+        val m3Equivalent = materialSchemeFromSeed(accent, isDark)
 
         val themeConfig = NexAlloyThemeConfig(
             isMiuix = true,
@@ -286,13 +283,7 @@ fun NexAlloyTheme(
             }
         }
     } else {
-        val m3Colors = when {
-            accent != null -> materialSchemeFromSeed(accent, isDark)
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-                if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            isDark -> M3Dark
-            else -> M3Light
-        }
+        val m3Colors = materialSchemeFromSeed(accent, isDark)
 
         val themeConfig = NexAlloyThemeConfig(
             isMiuix = false,

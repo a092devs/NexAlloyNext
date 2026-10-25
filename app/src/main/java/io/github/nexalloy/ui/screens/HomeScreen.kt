@@ -323,9 +323,13 @@ fun HomeContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(bottom = outerPadding.calculateBottomPadding()),
         ) {
-            MiuixTopAppBar(title = stringResource(R.string.app_name))
+            MiuixTopAppBar(
+                title = stringResource(R.string.app_name),
+                color = MaterialTheme.colorScheme.background,
+            )
             listContent(PaddingValues(0.dp))
         }
     } else {
@@ -333,9 +337,14 @@ fun HomeContent(
             modifier = Modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(bottom = outerPadding.calculateBottomPadding()),
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 TopAppBar(
                     title = { Text(stringResource(R.string.app_name)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
                     scrollBehavior = scrollBehavior,
                 )
             },
