@@ -53,11 +53,7 @@ class BundleManifest(
                     throw IncompatibleBundleException(
                         "Bundle '$name' $version requires NexAlloyNext series $compatibilitySeries (current: $managerVersion). Please update NexAlloyNext."
                     )
-                } else if (seriesComparison < 0) {
-                    throw IncompatibleBundleException(
-                        "Bundle '$name' $version is designed for older NexAlloyNext series $compatibilitySeries (current: $managerVersion)."
-                    )
-                }
+                } 
             }
         }
 

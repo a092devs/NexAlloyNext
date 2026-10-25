@@ -5,6 +5,10 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.0
+
+- App Icon & Visual Identity: Replaced legacy branding with modern Prism Alloy geometric emblem and Material You monochrome adaptive icons.
+- Backwards-Compatible Bundle Series Validation: Relaxed BundleManifest series check so manager 3.5 seamlessly loads and installs bundles from earlier series without version mismatch errors.
 ## 3.4.5
 
 - Patch Download Progress: Added real-time download progress tracking (streaming byte counts, percentage, and progress bar) during patch bundle installations and updates in both PatchesScreen and the HomeScreen updates banner.

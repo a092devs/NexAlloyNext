@@ -1,0 +1,25 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group>
+        <!-- Left Pillar -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M29,34 L44,27 L44,74 L29,81 Z" />
+        <!-- Diagonal Ribbon -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M47,27 L79,74 L61,81 L32,38 Z" />
+        <!-- Right Pillar -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M64,34 L79,27 L79,74 L64,81 Z" />
+        <!-- Center Spark -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M54,49 L58,54 L54,59 L50,54 Z" />
+    </group>
+</vector>
+

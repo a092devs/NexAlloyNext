@@ -48,6 +48,12 @@ class BundleCompatibilityTest {
     }
 
     @Test
+    fun olderSeriesPassesWhenApiCompatible() {
+        val manifest = createManifest(version = "3.4.10", series = "3.4", minManager = "3.4.0")
+        manifest.validateCompatibility("3.5.0")
+    }
+
+    @Test
     fun minManagerVersionEnforced() {
         val manifest = createManifest(minManager = "3.2.5")
         assertFailsWith<IncompatibleBundleException> {
