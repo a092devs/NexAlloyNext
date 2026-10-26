@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.3
+
+- Target Discovery Updates: Added official target version discovery for YouTube `21.43.523` and Reddit `2026.43.0` across the application catalog.
+- Compatibility & Patch Integration: Aligned manager catalog and patch recommendations with NexFusion 3.5.2 bundle series.
+
 ## 3.5.2
 
 - Fluid Navigation Geometry & Bounds Alignment: Re-architected indicator layout to sample exact measured tab coordinates directly from the layout pass, guaranteeing pixel-perfect alignment under the Settings tab across all screen sizes, display scaling levels, and orientations.
