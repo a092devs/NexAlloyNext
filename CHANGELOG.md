@@ -5,6 +5,12 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.4
+
+- Modern Brand Evolution: Introduced the new "Hardware Silicon Matrix" adaptive app icon featuring a chamfered silicon security die, thick circuit bus trace geometry, and hardware contact pads with complete Android 13+ monochrome themed-icon support.
+- Target Discovery Updates: Added official target version discovery for Instagram `453.0.0.55.79`, X (Twitter) `12.37.2-prod.01`, and YouTube Music `9.41.52` across the application catalog.
+- Compatibility & Bundle Integration: Fully synchronized target catalog and recommendation engine with NexFusion 3.5.4 patch bundle.
+
 ## 3.5.3
 
 - Target Discovery Updates: Added official target version discovery for YouTube `21.43.523` and Reddit `2026.43.0` across the application catalog.

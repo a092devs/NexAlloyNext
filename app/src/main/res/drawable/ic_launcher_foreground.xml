@@ -3,38 +3,105 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group>
-        <!-- Facet 1: Left column outer bevel -->
-        <path
-            android:fillColor="#1E3A8A"
-            android:pathData="M29,33 L37,27 L37,75 L29,81 Z" />
-        <!-- Facet 2: Left column front face -->
-        <path
-            android:fillColor="#2563EB"
-            android:pathData="M37,27 L46,27 L46,75 L37,75 Z" />
-        <!-- Facet 3: Diagonal ribbon under shade -->
-        <path
-            android:fillColor="#1D4ED8"
-            android:pathData="M37,27 L71,75 L63,81 L29,33 Z" />
-        <!-- Facet 4: Diagonal ribbon top surface -->
-        <path
-            android:fillColor="#06B6D4"
-            android:pathData="M37,27 L46,27 L79,75 L71,75 Z" />
-        <!-- Facet 5: Diagonal highlight specular crest -->
-        <path
-            android:fillColor="#38BDF8"
-            android:pathData="M46,27 L53,35 L76,71 L71,75 Z" />
-        <!-- Facet 6: Right column front face -->
-        <path
-            android:fillColor="#0EA5E9"
-            android:pathData="M63,33 L71,33 L71,81 L63,81 Z" />
-        <!-- Facet 7: Right column outer bevel -->
-        <path
-            android:fillColor="#3B82F6"
-            android:pathData="M71,33 L79,27 L79,75 L71,81 Z" />
-        <!-- Central alloy nexus spark -->
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M54,50 L57.5,54 L54,58 L50.5,54 Z" />
-    </group>
+
+    <!-- Outer Chamfered Silicon Die Bevel Shadow -->
+    <path
+        android:fillColor="#1E293B"
+        android:strokeColor="#334155"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:pathData="M 54,18 L 84,35 L 84,73 L 54,90 L 24,73 L 24,35 Z" />
+
+    <!-- Outer Die Front Bevel Plate -->
+    <path
+        android:fillColor="#334155"
+        android:pathData="M 54,19 L 83,35 L 83,73 L 54,89 L 25,73 L 25,35 Z" />
+
+    <!-- Recessed Silicon Die Cavity (Matte Charcoal) -->
+    <path
+        android:fillColor="#090D18"
+        android:pathData="M 54,23 L 79,37 L 79,71 L 54,85 L 29,71 L 29,37 Z" />
+
+    <!-- Cavity Inner Edge Accent Ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.2"
+        android:pathData="M 54,25 L 77,38 L 77,70 L 54,83 L 31,70 L 31,38 Z" />
+
+    <!-- Hexagon Corner Key Rivets -->
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M 53,20 L 55,20 L 55,22 L 53,22 Z M 81,36 L 83,36 L 83,38 L 81,38 Z M 81,70 L 83,70 L 83,72 L 81,72 Z M 53,86 L 55,86 L 55,88 L 53,88 Z M 25,70 L 27,70 L 27,72 L 25,72 Z M 25,36 L 27,36 L 27,38 L 25,38 Z" />
+
+    <!-- Vertical Alignment & Registration Guides -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#0284C7"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M 54,24 L 54,30 M 54,78 L 54,84" />
+
+    <!-- Circuit Bus Monogram N (Left Pillar Bevel) -->
+    <path
+        android:fillColor="#1E40AF"
+        android:pathData="M 37,38 L 41,38 L 41,70 L 37,70 Z" />
+
+    <!-- Circuit Bus Monogram N (Left Pillar Main) -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M 41,38 L 47,38 L 47,70 L 41,70 Z" />
+
+    <!-- Circuit Bus Monogram N (Diagonal Core Bridge) -->
+    <path
+        android:fillColor="#06B6D4"
+        android:pathData="M 47,38 L 61,59 L 61,49 L 47,38 Z" />
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M 47,49 L 61,70 L 61,59 L 47,38 Z" />
+
+    <!-- Specular Ridge On Diagonal Bus Trace -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#BAE6FD"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M 47,38 L 61,70" />
+
+    <!-- Circuit Bus Monogram N (Right Pillar Main) -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M 61,38 L 67,38 L 67,70 L 61,70 Z" />
+
+    <!-- Circuit Bus Monogram N (Right Pillar Bevel) -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M 67,38 L 71,38 L 71,70 L 67,70 Z" />
+
+    <!-- Gold / Cyan Contact Pads -->
+    <!-- Top-Left Pad (Silver/White) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 35,36 L 39,36 L 39,40 L 35,40 Z" />
+    <!-- Top-Right Pad (Electric Cyan) -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M 69,36 L 73,36 L 73,40 L 69,40 Z" />
+    <!-- Bottom-Left Pad (Electric Cyan) -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M 35,68 L 39,68 L 39,72 L 35,72 Z" />
+    <!-- Bottom-Right Pad (Silver/White) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 69,68 L 73,68 L 73,72 L 69,72 Z" />
+
+    <!-- Horizontal Bus Trace Link Pins -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M 31,54 L 35,54 M 73,54 L 77,54" />
+
 </vector>

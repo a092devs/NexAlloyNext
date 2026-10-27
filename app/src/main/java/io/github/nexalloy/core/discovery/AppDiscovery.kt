@@ -118,7 +118,12 @@ object AppDiscovery {
             appName = "YouTube Music",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0xFF0000,
-            targets = listOf(AppTarget("9.33.00")),
+            targets = listOf(
+                AppTarget("9.41.52"),
+                AppTarget("9.40.51"),
+                AppTarget("9.39.52"),
+                AppTarget("9.33.00"),
+            ),
         ),
         KnownSupportedApp(
             packageName = "com.reddit.frontpage",
@@ -237,6 +242,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0xE1306C,
             targets = listOf(
+                AppTarget("453.0.0.55.79"),
                 AppTarget("452.1.0.53.64"),
                 AppTarget("452.0.0.48.64"),
                 AppTarget("451.0.0.53.80"),
@@ -250,6 +256,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x000000,
             targets = listOf(
+                AppTarget("12.37.2-prod.01"),
                 AppTarget("12.36.1-prod.01"),
                 AppTarget("12.35.0-prod.01"),
             ),

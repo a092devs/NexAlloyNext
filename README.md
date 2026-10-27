@@ -1,6 +1,14 @@
 <div align="center">
+  <img src="assets/icon.png" width="128" height="128" alt="NexAlloyNext Logo" />
   <h1>NexAlloyNext</h1>
   <p><strong>Next-generation root + LSPosed runtime patch manager for Android.</strong></p>
+  <p>
+    <a href="https://github.com/a092devs/NexAlloyNext/releases"><img src="https://img.shields.io/github/v/release/a092devs/NexAlloyNext?style=flat-square&color=0284C7" alt="Latest Release" /></a>
+    <img src="https://img.shields.io/badge/Android-8.1%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 8.1+" />
+    <img src="https://img.shields.io/badge/LSPosed-API%20101-blue?style=flat-square" alt="LSPosed API 101" />
+    <img src="https://img.shields.io/badge/Design-Miuix%20%7C%20Material%203-blueviolet?style=flat-square" alt="Design Systems" />
+    <img src="https://img.shields.io/badge/Icon-Hardware%20Silicon%20Matrix-0284C7?style=flat-square" alt="Hardware Silicon Matrix" />
+  </p>
 </div>
 
 NexAlloyNext is an Android application that applies modular runtime bytecode patches to supported applications via LSPosed / libxposed (API 101) and DexKit.
