@@ -5,6 +5,13 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.6
+
+- Target Discovery & Catalog Synchronization:
+  * Added official target support for X (Twitter) `12.38.0-prod.01`.
+  * Synchronized YouTube target recommendations so `21.43.523` is properly surfaced as the recommended release.
+- Compatibility & Bundle Integration: Aligned application catalog and recommendation engine with NexFusion 3.5.6 patch bundle.
+
 ## 3.5.5
 
 - Target Discovery & Catalog Synchronization:
