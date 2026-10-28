@@ -5,6 +5,10 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.7
+
+- Compatibility & Bundle Integration: Synchronized application catalog and recommendation engine with NexFusion 3.5.7 patch bundle including complete LinkedIn SDUI media downloading support.
+
 ## 3.5.6
 
 - Target Discovery & Catalog Synchronization:
