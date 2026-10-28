@@ -14,6 +14,7 @@
     <a href="#-getting-started">🚀 Getting Started</a> •
     <a href="#-key-features">⚡ Features</a> •
     <a href="#-curated-patch-repositories">🧩 Patch Bundles</a> •
+    <a href="#-supported-applications-matrix">📱 Supported Apps</a> •
     <a href="#-appearance--theming">🎨 Theming</a> •
     <a href="#-troubleshooting">🔍 Troubleshooting</a>
   </p>
@@ -106,6 +107,30 @@ The official companion patch repository is maintained at:
 
 ---
 
+## 📱 Supported Applications Matrix
+
+| Application | Package Identifier | Key Patch Capabilities |
+|---|---|---|
+| **YouTube** | `com.google.android.youtube` | Ad-free playback, SponsorBlock, background audio, DeArrow replacement, custom speed/quality dialogs, swipe volume/brightness, miniplayer, ambient mode, Litho node bypass, channel search fix. |
+| **YouTube Music** | `com.google.android.apps.youtube.music` | Background playback, audio ad removal, exclusive audio stream playback, hide upgrade buttons, suppress promotional banners. |
+| **Spotify** | `com.spotify.music` | Audio ad muting, hide promotional banners and video interstitial ad views, hide Premium tab, Material You theme, custom rounded corners, tracking link cleaner. |
+| **Telegram** | `org.telegram.messenger` | Remove channel sponsored messages, bot ads, and video promotions; hide Story bar and avatar story rings; keep deleted messages locally; exact unrounded counts; 512 KB fast multi-connection downloads; block update dialogs; disable telemetry; auto-reveal spoilers; pure black AMOLED dark theme. |
+| **Telegram (Web)** | `org.telegram.messenger.web` | Identical full-suite runtime patches as official Telegram for web-distributed standalone builds. |
+| **Instagram** | `com.instagram.android` | Media downloader for feed posts, Reels, Stories, Highlights, and profile pictures; remove sponsored feed posts, Reels, and Story ads; anonymous Story and Live viewing; strip tracking parameters; ghost mode. |
+| **Facebook** | `com.facebook.katana` | Media downloader for videos, photos, Reels, and Stories with DASH stream audio muxing; sponsored post and Reel ad removal; bypass screenshot and screen recording restrictions; telemetry blocking. |
+| **X (Twitter)** | `com.twitter.android` | Promoted post and ad removal; video and GIF media downloader; bypass Compose sensitive media blur interstitials without tap-to-reveal; block forced updates; telemetry blackholing. |
+| **Reddit** | `com.reddit.frontpage` | Feed and comment ad removal; guest browsing mode; sanitize shared URLs; suppress screenshot sharing bottom sheet; unmute Redgifs streams; custom feed sorting. |
+| **Discord** | `com.discord` | Suppress crash telemetry, analytics, touch logging, and advertising identifiers; native system font typography support across chat and UI surfaces. |
+| **LinkedIn** | `com.linkedin.android` | 1-tap media downloader for photos, carousel images, and progressive MP4 videos; sanitize share links; direct URL navigation bypassing `safety/go` redirects; hide suggested posts, promoted jobs, and premium upsells; feed filters; Material You dynamic theme. |
+| **Google Photos** | `com.google.android.apps.photos` | Device spoofing for unlimited original-quality Google Photos cloud storage backups; DCIM folder backup control. |
+| **Gboard** | `com.google.android.inputmethod.latin` | Rounded keycaps; Google Sans Flex typography & GM3 Expressive styling; proactive post-correction undo controls; Quick & Magic Emoji (Emojify); expanded AI writing tools; spellchecker chips UI; scan text OCR; spacebar cursor trackpad. |
+| **Gmail** | `com.google.android.gm` | Suppress sponsored promotional and advertising cards in personal inboxes. |
+| **Google App (Discover)** | `com.google.android.googlequicksearchbox` | Filter sponsored cards, shopping ads, and promotional recommendations in the Discover feed. |
+| **MiXplorer** | `com.mixplorer` | Fix scoped-storage file sharing by masking unreadable `_data` paths on Android 11+ (API 30+). |
+| **Proton VPN** | `ch.protonvpn.android` | Suppress upgrade banners and nag dialogs; unlock NetShield UI toggles; disable telemetry and background observability workers. |
+
+---
+
 ## 🛠️ Building from Source
 
 ### Prerequisites
@@ -140,9 +165,10 @@ cd NexAlloyNext
 
 ## 🤝 Contributing
 
-- Issues and pull requests are welcome. All contributions must adhere to the **runtime-only architecture**: zero APK modification, re-signing, or decompilation.
-- Run `./gradlew testDebugUnitTest` prior to opening pull requests.
-- Patch development occurs in the companion repository: [a092devs/NexAlloyNext-Patches](https://github.com/a092devs/NexAlloyNext-Patches).
+Contributions, bug reports, and pull requests are welcome!
+- Ensure all unit tests pass prior to opening pull requests: `./gradlew testDebugUnitTest`
+- All contributions must adhere to the runtime-only architecture (in-memory execution via LSPosed API 101, zero APK tampering).
+- Ensure target application stability by wrapping non-essential hooks in `runCatching` safeguards.
 
 ---
 
@@ -157,20 +183,16 @@ NexAlloyNext is developed and maintained by **a092devs**. We gratefully acknowle
 | **[compose-miuix-ui](https://github.com/compose-miuix-ui/miuix)** | Official Compose Multiplatform MIUI / HyperOS design components by YuKongA |
 | **[Morphe](https://morphe.software)** | Bytecode runtime hook patterns, fingerprint specifications, and shared utilities |
 | **[ReVanced](https://revanced.app)** | Reverse engineering research, feature specifications, and community contributions |
-| **[SysAdminDoc](https://github.com/SysAdminDoc)** | HushGram, HushFacebook, and HushTelegram stealth, ad-blocking, and downloaders |
-| **[Piko](https://github.com/crimera/piko)** | Instagram and X (Twitter) runtime hook logic and downloader patterns |
-| **[VenusIsJaded](https://github.com/VenusIsJaded/Venus-Patches)** | Discord native privacy target tables and font styling |
-| **[heyymichii](https://github.com/heyymichii/michii-patches)** | LinkedIn share-link cleaning, direct navigation, and tracking removal |
-| **[ak800i](https://github.com/ak800i/mixplorer-patches-for-morphe)** | MiXplorer scoped-storage file sharing fix for Android 11+ |
-| **[jkennethcarino](https://github.com/jkennethcarino/adobo)** | Reddit screenshot-banner suppression, link sanitization, and UI hooks |
-| **[gnadgnaoh](https://github.com/gnadgnaoh/NexAlloy-XES)** | Gmail inbox ad removal and Google Discover feed ad filtering |
-| **[2eno](https://github.com/2eno)** | Early contributions to manager tooling, Spotify hooks, and Google Ad filters |
-
-> [!NOTE]
-> **Attribution Policy:** All ports, adaptations, and integrated specifications record upstream repository URLs and maintain original author copyright and license notices. Code derived from GPL-3.0 projects remains licensed under GPL-3.0.
+| **[SysAdminDoc](https://github.com/SysAdminDoc)** | Stealth, ad-blocking, and media extraction hook specifications |
+| **[Piko](https://github.com/crimera/piko)** | Runtime hook logic and downloader patterns |
+| **[VenusIsJaded](https://github.com/VenusIsJaded/Venus-Patches)** | Privacy target tables and font styling |
+| **[heyymichii](https://github.com/heyymichii/michii-patches)** | Share-link cleaning, direct navigation, and tracking removal |
+| **[ak800i](https://github.com/ak800i/mixplorer-patches-for-morphe)** | Scoped-storage file sharing fix for Android 11+ |
+| **[jkennethcarino](https://github.com/jkennethcarino/adobo)** | Screenshot-banner suppression, link sanitization, and UI hooks |
+| **[gnadgnaoh](https://github.com/gnadgnaoh/NexAlloy-XES)** | Inbox promotion and Discover feed ad filtering |
 
 ---
 
 ## ⚖️ License
 
-NexAlloyNext is open-source software developed by **a092devs** and licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE). Third-party libraries, ported feature specifications, and upstream dependencies retain their respective licenses and attribution.
+NexAlloyNext is open-source software developed by **a092devs** and licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE). Third-party libraries and ported feature specifications retain their respective licenses and attribution.
