@@ -5,6 +5,13 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.5
+
+- Target Discovery & Catalog Synchronization:
+  * Added official target support for Telegram and Telegram (Web) `13.1.1` (Play Store build).
+  * Synchronized target catalog for LinkedIn `4.1.1266` compatibility.
+- Compatibility & Bundle Integration: Fully aligned application catalog and recommendation engine with NexFusion 3.5.5 patch bundle features across all 17 supported applications.
+
 ## 3.5.4
 
 - Modern Brand Evolution: Introduced the new "Hardware Silicon Matrix" adaptive app icon featuring a chamfered silicon security die, thick circuit bus trace geometry, and hardware contact pads with complete Android 13+ monochrome themed-icon support.

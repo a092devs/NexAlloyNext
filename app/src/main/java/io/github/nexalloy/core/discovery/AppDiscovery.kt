@@ -217,6 +217,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0A66C2,
             targets = listOf(
+                AppTarget("4.1.1266"),
                 AppTarget("4.1.1264"),
                 AppTarget("4.1.1263"),
                 AppTarget("4.1.1261"),
@@ -267,6 +268,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x2AABEE,
             targets = listOf(
+                AppTarget("13.1.1"),
                 AppTarget("13.1.0"),
                 AppTarget("12.10.6"),
             ),
@@ -277,6 +279,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x2AABEE,
             targets = listOf(
+                AppTarget("13.1.1"),
                 AppTarget("13.1.0"),
                 AppTarget("12.10.6"),
             ),
