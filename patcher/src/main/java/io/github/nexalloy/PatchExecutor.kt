@@ -140,8 +140,9 @@ class PatchExecutor(
             }
 
             runCatching { hook.run(this) }.onFailure { err ->
-                XposedBridge.log("${bundle.id}: patch '${hook.name}' failed")
-                PatcherLog.state(err) {
+                XposedBridge.log("${bundle.id}: patch '${hook.name}' failed: ${err.message ?: err.javaClass.simpleName}")
+                XposedBridge.log(err)
+                PatcherLog.error(err) {
                     "${bundle.id}: patch '${hook.name}' failed: ${err.message ?: err.javaClass.simpleName}"
                 }
                 failedPatches.add(hook)

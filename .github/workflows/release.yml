@@ -143,6 +143,7 @@ jobs:
 
                   ./gradlew \
                     :app:assembleRelease \
+                    :app:assembleDebug \
                     :patcher:publishAllPublicationsToReleaseRepository \
                     --no-configuration-cache
                   ./gradlew -p build-logic \
@@ -201,14 +202,20 @@ jobs:
 
                   mkdir -p release
 
-                  APK="app/build/outputs/apk/release/app-release.apk"
+                  APK_RELEASE="app/build/outputs/apk/release/app-release.apk"
+                  APK_DEBUG="app/build/outputs/apk/debug/app-debug.apk"
 
-                  if [[ ! -f "$APK" ]]; then
-                    echo "::error::Release APK not found at $APK"
+                  if [[ ! -f "$APK_RELEASE" ]]; then
+                    echo "::error::Release APK not found at $APK_RELEASE"
                     exit 1
                   fi
 
-                  cp "$APK" "release/NexAlloyNext-${RELEASE_TAG}.apk"
+                  cp "$APK_RELEASE" "release/NexAlloyNext-${RELEASE_TAG}.apk"
+                  RELEASE_ASSETS=("release/NexAlloyNext-${RELEASE_TAG}.apk")
+                  if [[ -f "$APK_DEBUG" ]]; then
+                    cp "$APK_DEBUG" "release/NexAlloyNext-${RELEASE_TAG}-debug.apk"
+                    RELEASE_ASSETS+=("release/NexAlloyNext-${RELEASE_TAG}-debug.apk")
+                  fi
 
                   if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
                     echo "::error::Release $RELEASE_TAG already exists. Choose a new tag."
@@ -217,7 +224,7 @@ jobs:
 
                   RELEASE_ARGS=(
                     "$RELEASE_TAG"
-                    "release/NexAlloyNext-${RELEASE_TAG}.apk"
+                    "${RELEASE_ASSETS[@]}"
                     --target "$GITHUB_SHA"
                     --title "$RELEASE_TAG"
                     --notes-file release-notes.md

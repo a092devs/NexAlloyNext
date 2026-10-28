@@ -20,8 +20,8 @@ android {
 
     defaultConfig {
         applicationId = "io.github.nexalloy.next"
-        versionCode = 52
-        versionName = "3.5.7"
+        versionCode = 53
+        versionName = "3.5.8"
         buildConfigField("String", "COMMIT_HASH", "\"${gitCommitHashProvider.get()}\"")
         buildConfigField("long", "COMMIT_DATE", "${gitCommitDateProvider.get()}L")
         // GitHub repository checked for updates and used as the default patch source.
@@ -56,6 +56,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
             // Without a keystore, release builds (e.g. CI pre-releases) are signed with the debug key.
+            signingConfig = signingConfigs.getByName(if (ksFile.exists()) "release" else "debug")
+        }
+        debug {
             signingConfig = signingConfigs.getByName(if (ksFile.exists()) "release" else "debug")
         }
     }

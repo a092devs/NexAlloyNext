@@ -5,6 +5,14 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.8
+
+- Dual Artifact Distribution: Release workflow now automatically compiles and attaches both optimized release APKs (`NexAlloyNext-<tag>.apk`) and standalone debug APKs (`NexAlloyNext-<tag>-debug.apk`) for immediate diagnostic logging and testing.
+- Patcher Diagnostic Visibility & Trace Reporting:
+  * Enhanced `PatchExecutor` hook failure handlers to log complete exception stack traces directly into LSPosed logs (`XposedBridge.log`) and Android Logcat (`PatcherLog.error`).
+  * Instrumented bundle initialization in `PatchSession` with detailed exception capture for missing or broken patch dependencies.
+- Compatibility & Bundle Integration: Synchronized target catalog and recommendation engine with NexFusion 3.5.8 patch bundle.
+
 ## 3.5.7
 
 - Compatibility & Bundle Integration: Synchronized application catalog and recommendation engine with NexFusion 3.5.7 patch bundle including complete LinkedIn SDUI media downloading support.

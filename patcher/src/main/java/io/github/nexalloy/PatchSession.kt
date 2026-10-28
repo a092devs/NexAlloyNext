@@ -108,6 +108,7 @@ class PatchSession(
     /** Records a bundle that could not be loaded at all. */
     fun reportBundleFailure(bundleName: String, error: Throwable) {
         XposedBridge.log(error)
+        PatcherLog.error(error) { "Failed to load bundle $bundleName: ${error.message ?: error.javaClass.simpleName}" }
         val msg = error.message?.takeIf { it.isNotBlank() } ?: error.javaClass.simpleName
         failedPatches.add("all patches ($bundleName: $msg)")
     }
@@ -115,7 +116,7 @@ class PatchSession(
     fun finish() {
         val signature = failedPatches.joinToString()
         if (signature.isNotEmpty()) {
-            PatcherLog.state { "${lpparam.packageName} version: $appVersion: failing patches: $signature" }
+            PatcherLog.error { "${lpparam.packageName} version: $appVersion: failing patches: $signature" }
             // A deterministic miss would toast on every start of the affected app until the system
             // blocks the app's toasts outright (and eats the message); only a change in the failing
             // set is news, the log line above carries the rest.
