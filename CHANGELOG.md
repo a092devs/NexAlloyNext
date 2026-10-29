@@ -5,6 +5,11 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.9
+
+- Target Discovery Updates: Added Discord `351.11`, Instagram `453.0.0.57.79`, and Reddit `2026.43.1` to the application catalog.
+- Compatibility & Bundle Integration: Synchronized the target catalog and recommendation engine with NexFusion 3.5.9.
+
 ## 3.5.8
 
 - Dual Artifact Distribution: Release workflow now automatically compiles and attaches both optimized release APKs (`NexAlloyNext-<tag>.apk`) and standalone debug APKs (`NexAlloyNext-<tag>-debug.apk`) for immediate diagnostic logging and testing.
