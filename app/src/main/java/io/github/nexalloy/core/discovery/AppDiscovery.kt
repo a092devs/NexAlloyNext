@@ -168,6 +168,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x4285F4,
             targets = listOf(
+                AppTarget("18.5.6.993608717-release-arm64-v8a"),
                 AppTarget("18.5.4.993608717-release-arm64-v8a"),
                 AppTarget("18.5.3.993608717-release-arm64-v8a"),
                 AppTarget("18.4.1.985164140-release-arm64-v8a"),
@@ -193,10 +194,21 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0866FF,
             targets = listOf(
+                AppTarget("585.0.0.47.54"),
                 AppTarget("584.0.0.51.56"),
                 AppTarget("583.0.0.39.55"),
                 AppTarget("582.0.0.50.54"),
                 AppTarget("581.0.0.45.54"),
+            ),
+        ),
+        KnownSupportedApp(
+            packageName = "com.crunchyroll.crunchyroid",
+            appName = "Crunchyroll",
+            defaultBundleName = "NexFusion Patches",
+            appIconColor = 0xFF5C00,
+            targets = listOf(
+                AppTarget("3.126.0"),
+                AppTarget("3.117.0"),
             ),
         ),
         KnownSupportedApp(
@@ -219,14 +231,6 @@ object AppDiscovery {
             appName = "LinkedIn",
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x0A66C2,
-            targets = listOf(
-                AppTarget("4.1.1266"),
-                AppTarget("4.1.1264"),
-                AppTarget("4.1.1263"),
-                AppTarget("4.1.1261"),
-                AppTarget("4.1.1259"),
-                AppTarget("4.1.1255.1"),
-            ),
         ),
         KnownSupportedApp(
             packageName = "com.mixplorer",
@@ -261,6 +265,7 @@ object AppDiscovery {
             defaultBundleName = "NexFusion Patches",
             appIconColor = 0x000000,
             targets = listOf(
+                AppTarget("12.38.1-prod.01"),
                 AppTarget("12.38.0-prod.01"),
                 AppTarget("12.37.2-prod.01"),
                 AppTarget("12.36.1-prod.01"),

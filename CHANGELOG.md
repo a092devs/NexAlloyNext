@@ -5,6 +5,16 @@ every push to `main` for the version in `app/build.gradle.kts` (`versionName` wi
 substituted) when that version has no release yet. The section matching the release tag becomes
 the release notes, falling back to generated commit notes when no section exists.
 
+## 3.5.10
+
+- Application Catalog Expansion: Added Crunchyroll (`com.crunchyroll.crunchyroid`) with verified targets `3.126.0` and `3.117.0` supporting native Picture-in-Picture mode and Continue Watching feed removal.
+- Target Discovery Updates:
+  * Added Facebook `585.0.0.47.54`.
+  * Added Gboard `18.5.6.993608717-release-arm64-v8a`.
+  * Converted LinkedIn to universal target support across all installed versions.
+  * Added X (Twitter) `12.38.1-prod.01`.
+- Compatibility & Bundle Integration: Synchronized application catalog and recommendation engine with NexFusion 3.5.10 patch bundle.
+
 ## 3.5.9
 
 - Target Discovery Updates: Added Discord `351.11`, Instagram `453.0.0.57.79`, and Reddit `2026.43.1` to the application catalog.
